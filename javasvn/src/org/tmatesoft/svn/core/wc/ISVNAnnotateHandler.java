@@ -13,7 +13,12 @@ package org.tmatesoft.svn.core.wc;
 
 import java.util.Date;
 
+import org.tmatesoft.svn.core.io.SVNRepository;
+
 /**
+ * This is an interface for a handler that is to be invoked on each delta line
+ * within the {@link SVNRepository#annotate(String, long, long, ISVNAnnotateHandler)
+ * annotate} method.
  * 
  * @version 1.0
  * @author 	TMate Software Ltd.

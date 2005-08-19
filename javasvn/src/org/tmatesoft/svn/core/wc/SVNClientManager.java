@@ -12,16 +12,14 @@
 package org.tmatesoft.svn.core.wc;
 
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
+import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
-import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
+import org.tmatesoft.svn.core.io.SVNRepositoryLocation;
 
 /**
  * @version 1.0
  * @author  TMate Software Ltd.
- * 
- * @see     <a target="_top" href="http://tmate.org/svn/kb/examples/">Examples</a>
  */
 public class SVNClientManager implements ISVNRepositoryFactory {
     
@@ -68,8 +66,9 @@ public class SVNClientManager implements ISVNRepositoryFactory {
         return new SVNClientManager(options, authManager);
     }
 
-    public SVNRepository createRepository(SVNURL url) throws SVNException {
-        SVNRepository repository = SVNRepositoryFactory.create(url);
+    public SVNRepository createRepository(String url) throws SVNException {
+        SVNRepositoryLocation location = SVNRepositoryLocation.parseURL(url);
+        SVNRepository repository = SVNRepositoryFactoryImpl.create(location);
         repository.setAuthenticationManager(myAuthenticationManager);
         return repository;
     }
@@ -97,9 +96,6 @@ public class SVNClientManager implements ISVNRepositoryFactory {
         }
         if (myStatusClient != null) {
             myStatusClient.setEventHandler(handler);
-        }
-        if (myUpdateClient != null) {
-            myUpdateClient.setEventHandler(handler);
         }
         if (myWCClient != null) {
             myWCClient.setEventHandler(handler);
