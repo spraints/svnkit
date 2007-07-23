@@ -24,7 +24,6 @@ import java.util.TimeZone;
 import org.tmatesoft.svn.cli.SVNArgument;
 import org.tmatesoft.svn.cli.SVNCommand;
 import org.tmatesoft.svn.core.ISVNDirEntryHandler;
-import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
@@ -56,21 +55,10 @@ public class SVNLsCommand extends SVNCommand implements ISVNDirEntryHandler {
     }
 
     public void run(PrintStream out, PrintStream err) throws SVNException {
-        SVNDepth depth = SVNDepth.UNKNOWN;
-        if (getCommandLine().hasArgument(SVNArgument.RECURSIVE)) {
-            depth = SVNDepth.fromRecurse(true);
-        }
-        String depthStr = (String) getCommandLine().getArgumentValue(SVNArgument.DEPTH);
-        if (depthStr != null) {
-            depth = SVNDepth.fromString(depthStr);
-        }
-        if (depth == SVNDepth.UNKNOWN) {
-            depth = SVNDepth.IMMEDIATES;
-        }
-        
+        boolean recursive = getCommandLine().hasArgument(SVNArgument.RECURSIVE);
         myIsVerbose = getCommandLine().hasArgument(SVNArgument.VERBOSE);
-        int entryFields = myIsVerbose ? SVNDirEntry.DIRENT_ALL : SVNDirEntry.DIRENT_KIND | SVNDirEntry.DIRENT_TIME;
         myPrintStream = out;
+        
         boolean isXml = getCommandLine().hasArgument(SVNArgument.XML);
         SVNXMLSerializer serializer = isXml ? new SVNXMLSerializer(myPrintStream) : null;
         SVNXMLDirEntryHandler handler = isXml ? new SVNXMLDirEntryHandler(serializer) : null;
@@ -90,7 +78,7 @@ public class SVNLsCommand extends SVNCommand implements ISVNDirEntryHandler {
             if (handler != null) {
                 handler.startTarget(url);
             }
-            logClient.doList(SVNURL.parseURIEncoded(url), getCommandLine().getPegRevision(i), revision == null ? SVNRevision.UNDEFINED : revision, myIsVerbose || isXml, depth, entryFields, isXml ? handler : (ISVNDirEntryHandler) this);
+            logClient.doList(SVNURL.parseURIEncoded(url), getCommandLine().getPegRevision(i), revision == null ? SVNRevision.UNDEFINED : revision, myIsVerbose || isXml, recursive, isXml ? handler : (ISVNDirEntryHandler) this);
             if (handler != null) {
                 handler.endTarget();
             }
@@ -100,7 +88,7 @@ public class SVNLsCommand extends SVNCommand implements ISVNDirEntryHandler {
             if (handler != null) {
                 handler.startTarget(path.getAbsolutePath().replace(File.separatorChar, '/'));
             }
-            logClient.doList(path, getCommandLine().getPathPegRevision(i), revision == null || !revision.isValid() ? SVNRevision.BASE : revision, myIsVerbose || isXml, depth, entryFields, isXml ? handler : (ISVNDirEntryHandler) this);
+            logClient.doList(path, getCommandLine().getPathPegRevision(i), revision == null || !revision.isValid() ? SVNRevision.BASE : revision, myIsVerbose || isXml, recursive, isXml ? handler : (ISVNDirEntryHandler) this);
             if (handler != null) {
                 handler.endTarget();
             }
@@ -117,14 +105,6 @@ public class SVNLsCommand extends SVNCommand implements ISVNDirEntryHandler {
     }
 
     public void handleDirEntry(SVNDirEntry dirEntry) {
-        String path = dirEntry.getRelativePath();
-        if ("".equals(path)) {
-            if (myIsVerbose && dirEntry.getKind() == SVNNodeKind.DIR) {
-                path = ".";
-            } else if (dirEntry.getKind() == SVNNodeKind.DIR) {
-                return;
-            }
-        }
         if (myIsVerbose) {
             StringBuffer verbose = new StringBuffer();
             verbose.append(SVNCommand.formatString(dirEntry.getRevision() + "", 7, false));
@@ -149,7 +129,7 @@ public class SVNLsCommand extends SVNCommand implements ISVNDirEntryHandler {
             verbose.append(' ');
             myPrintStream.print(verbose.toString());
         }
-        myPrintStream.print(path);
+        myPrintStream.print(dirEntry.getRelativePath());
         if (dirEntry.getKind() == SVNNodeKind.DIR) {
             myPrintStream.print('/');
         }

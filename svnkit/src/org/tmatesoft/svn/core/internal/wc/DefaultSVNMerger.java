@@ -90,6 +90,7 @@ public class DefaultSVNMerger implements ISVNMerger {
         } else if (mergeResult == FSMergerBySequence.MERGED) {
             status = SVNStatusType.MERGED;
         }
+        
         return status;
     }
 

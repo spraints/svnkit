@@ -51,6 +51,7 @@ public class SVNWriter {
                     os.write(' ');
                     continue;
                 }
+
                 Object item = src[offset++];
                 if (item == null) {
                     continue;

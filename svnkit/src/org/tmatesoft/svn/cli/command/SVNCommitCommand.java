@@ -15,7 +15,6 @@ package org.tmatesoft.svn.cli.command;
 import org.tmatesoft.svn.cli.SVNArgument;
 import org.tmatesoft.svn.cli.SVNCommand;
 import org.tmatesoft.svn.core.SVNCommitInfo;
-import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
@@ -24,7 +23,6 @@ import org.tmatesoft.svn.core.wc.SVNCommitClient;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Map;
 
 /**
  * @version 1.1.1
@@ -38,21 +36,8 @@ public class SVNCommitCommand extends SVNCommand {
     
     public void run(final PrintStream out, PrintStream err) throws SVNException {
         checkEditorCommand();
-        SVNDepth depth = SVNDepth.UNKNOWN;
-        if (getCommandLine().hasArgument(SVNArgument.NON_RECURSIVE)) {
-            depth = SVNDepth.fromRecurse(false);
-        }
-        String depthStr = (String) getCommandLine().getArgumentValue(SVNArgument.DEPTH);
-        if (depthStr != null) {
-            depth = SVNDepth.fromString(depthStr);
-        }
-        if (depth == SVNDepth.UNKNOWN) {
-            depth = SVNDepth.INFINITY;
-        }
-        
+        final boolean recursive = !getCommandLine().hasArgument(SVNArgument.NON_RECURSIVE);
         boolean keepLocks = getCommandLine().hasArgument(SVNArgument.NO_UNLOCK);
-        String changelistName = (String) getCommandLine().getArgumentValue(SVNArgument.CHANGELIST); 
-        boolean keepChangelist = getCommandLine().hasArgument(SVNArgument.KEEP_CHANGELIST);
         final String message = getCommitMessage();
 
         File[] localPaths = new File[getCommandLine().getPathCount()];
@@ -60,21 +45,14 @@ public class SVNCommitCommand extends SVNCommand {
             matchTabsInPath(getCommandLine().getPathAt(i), err);
             localPaths[i] = new File(getCommandLine().getPathAt(i));
         }
-        boolean quiet = getCommandLine().hasArgument(SVNArgument.QUIET);
-        if (!quiet) {
-            getClientManager().setEventHandler(new SVNCommandEventProcessor(out, err, false));
-        }
-        Map revProps = (Map) getCommandLine().getArgumentValue(SVNArgument.WITH_REVPROP); 
-        
+        getClientManager().setEventHandler(new SVNCommandEventProcessor(out, err, false));
         SVNCommitClient client = getClientManager().getCommitClient();
-        SVNCommitInfo result = client.doCommit(localPaths, keepLocks, message, 
-                                               revProps, changelistName, keepChangelist, false, 
-                                               SVNDepth.recurseFromDepth(depth));
-        if (result != SVNCommitInfo.NULL && !quiet) {
+        SVNCommitInfo result = client.doCommit(localPaths, keepLocks, message, false, recursive);
+        if (result != SVNCommitInfo.NULL) {
             out.println();
             out.println("Committed revision " + result.getNewRevision() + ".");
         }
-        if (result.getErrorMessage() != null && result.getErrorMessage().getErrorCode() == SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED && !quiet) {
+        if (result.getErrorMessage() != null && result.getErrorMessage().getErrorCode() == SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED) {
             out.println();
             out.println(result.getErrorMessage());
         }

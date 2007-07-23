@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.tmatesoft.svn.core.SVNCommitInfo;
-import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
@@ -56,17 +55,17 @@ public class SVNDiffEditor implements ISVNEditor {
     private SVNFileInfo myCurrentFile;
     private SVNDeltaProcessor myDeltaProcessor;
     private SVNAdminAreaInfo myAdminInfo;
-    private SVNDepth myDepth;
+    private boolean myIsRecursive;
     private File myTempDirectory;
     private AbstractDiffCallback myDiffCallback;
 
     public SVNDiffEditor(SVNWCAccess wcAccess, SVNAdminAreaInfo info, AbstractDiffCallback callback,
-            boolean useAncestry, boolean reverseDiff, boolean compareToBase, SVNDepth depth) {
+            boolean useAncestry, boolean reverseDiff, boolean compareToBase, boolean recursive) {
         myWCAccess = wcAccess;
         myAdminInfo = info;
         myUseAncestry = useAncestry;
         myIsReverseDiff = reverseDiff;
-        myDepth = depth;
+        myIsRecursive = recursive;
         myIsCompareToBase = compareToBase;
         myDiffCallback = callback;
         myDeltaProcessor = new SVNDeltaProcessor();
@@ -129,7 +128,7 @@ public class SVNDiffEditor implements ISVNEditor {
             }
             if (entry.isFile()) {
                 reportAddedFile(info, SVNPathUtil.append(info.myPath, entry.getName()), entry);
-            } else if (entry.isDirectory() && myDepth == SVNDepth.INFINITY) {
+            } else if (entry.isDirectory() && myIsRecursive) {
                 SVNDirectoryInfo childInfo = createDirInfo(info, SVNPathUtil.append(info.myPath, entry.getName()), false);
                 reportAddedDir(childInfo);
             }
@@ -274,7 +273,8 @@ public class SVNDiffEditor implements ISVNEditor {
         }
     }
 
-    public void addFile(String path, String copyFromPath, long copyFromRevision) throws SVNException {
+    public void addFile(String path, String copyFromPath, long copyFromRevision)
+            throws SVNException {
         String name = SVNPathUtil.tail(path);
         myCurrentFile = createFileInfo(myCurrentDirectory, path, true);
         myCurrentDirectory.myComparedEntries.add(name);
@@ -449,7 +449,7 @@ public class SVNDiffEditor implements ISVNEditor {
             if (entry.isFile()) {
                 reportModifiedFile(info, entry);
             } else if (entry.isDirectory()) {
-                if (anchor || myDepth == SVNDepth.INFINITY) {
+                if (anchor || myIsRecursive) {
                     SVNDirectoryInfo childInfo = createDirInfo(info, SVNPathUtil.append(info.myPath, entry.getName()), false);
                     localDirectoryDiff(childInfo);
                 }

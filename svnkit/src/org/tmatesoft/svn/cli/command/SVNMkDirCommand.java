@@ -18,7 +18,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.tmatesoft.svn.cli.SVNArgument;
 import org.tmatesoft.svn.cli.SVNCommand;
@@ -27,7 +26,6 @@ import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.internal.wc.SVNErrorManager;
 import org.tmatesoft.svn.core.wc.SVNCommitClient;
 import org.tmatesoft.svn.core.wc.SVNWCClient;
 
@@ -53,7 +51,7 @@ public class SVNMkDirCommand extends SVNCommand {
         }
     }
 
-    private void createLocalDirectories(final PrintStream out, PrintStream err) throws SVNException {
+    private void createLocalDirectories(final PrintStream out, PrintStream err) {
         final Collection paths = new ArrayList();
         for (int i = 0; i < getCommandLine().getPathCount(); i++) {
             if (matchTabsInPath(getCommandLine().getPathAt(i), err)) {
@@ -67,18 +65,12 @@ public class SVNMkDirCommand extends SVNCommand {
         getClientManager().setEventHandler(new SVNCommandEventProcessor(out, err, false));
         SVNWCClient wcClient = getClientManager().getWCClient();
         boolean recursive = !getCommandLine().hasArgument(SVNArgument.NON_RECURSIVE);
-        boolean makeParents = getCommandLine().hasArgument(SVNArgument.PARENTS);
         for (Iterator files = paths.iterator(); files.hasNext();) {
             File file = (File) files.next();
             try {
-                wcClient.doAdd(file, false, true, false, recursive, false, makeParents);
+                wcClient.doAdd(file, false, true, false, recursive, false);
             } catch (SVNException e) {
-                if (!makeParents && e.getErrorMessage().getMessage().indexOf("non-existent parents") != -1) {
-                    SVNErrorMessage error = e.getErrorMessage().wrap("Try 'svn mkdir --parents' instead?");
-                    SVNErrorManager.error(error);
-                }
-                throw e;
-                //err.println(e.getMessage());
+                err.println(e.getMessage());
             }
         }
     }
@@ -102,21 +94,10 @@ public class SVNMkDirCommand extends SVNCommand {
         for (int i = 0; i < svnURLs.length; i++) {
             svnURLs[i] = SVNURL.parseURIEncoded(paths[i]);
         }
-        Map revProps = (Map) getCommandLine().getArgumentValue(SVNArgument.WITH_REVPROP); 
-        boolean makeParents = getCommandLine().hasArgument(SVNArgument.PARENTS);
-        try {
-            SVNCommitInfo info = client.doMkDir(svnURLs, message == null ? "" : message, revProps, makeParents);
-            if (info != SVNCommitInfo.NULL) {
-                out.println();
-                out.println("Committed revision " + info.getNewRevision() + ".");
-            }
-        } catch (SVNException e) {
-            if (!makeParents && e.getErrorMessage().getErrorCode() == SVNErrorCode.FS_NOT_FOUND ||
-                    e.getErrorMessage().getErrorCode() == SVNErrorCode.RA_DAV_PATH_NOT_FOUND) {
-                SVNErrorMessage error = e.getErrorMessage().wrap("Try 'svn mkdir --parents' instead?");
-                SVNErrorManager.error(error);
-            }
-            throw e;
+        SVNCommitInfo info = client.doMkDir(svnURLs, message == null ? "" : message);
+        if (info != SVNCommitInfo.NULL) {
+            out.println();
+            out.println("Committed revision " + info.getNewRevision() + ".");
         }
     }
 }

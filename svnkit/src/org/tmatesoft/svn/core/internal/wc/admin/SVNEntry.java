@@ -11,21 +11,15 @@
  */
 package org.tmatesoft.svn.core.internal.wc.admin;
 
-import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.tmatesoft.svn.core.SVNDepth;
-import org.tmatesoft.svn.core.SVNErrorCode;
-import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNProperty;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
 import org.tmatesoft.svn.core.internal.util.SVNPathUtil;
-import org.tmatesoft.svn.core.internal.wc.SVNErrorManager;
-import org.tmatesoft.svn.core.io.SVNRepository;
 
 
 /**
@@ -37,7 +31,6 @@ public class SVNEntry implements Comparable {
     private Map myAttributes;
     private SVNAdminArea myAdminArea;
     private String myName;
-    private File myPath;
 
     public SVNEntry(Map attributes, SVNAdminArea adminArea, String name) {
         myAttributes = attributes;
@@ -116,11 +109,11 @@ public class SVNEntry implements Comparable {
             try {
                 rootEntry = myAdminArea.getEntry(myAdminArea.getThisDirName(), true);
             } catch (SVNException svne) {
-                return SVNRepository.INVALID_REVISION;
+                return -1;
             }
             return rootEntry.getRevision();
         }
-        return revStr != null ? Long.parseLong(revStr) : SVNRepository.INVALID_REVISION;
+        return revStr != null ? Long.parseLong(revStr) : -1;
     }
 
     public boolean isScheduledForAddition() {
@@ -172,44 +165,12 @@ public class SVNEntry implements Comparable {
         return setAttributeValue(SVNProperty.REVISION, Long.toString(revision));
     }
 
-    public boolean setChangelistName(String changelistName) {
-        return setAttributeValue(SVNProperty.CHANGELIST, changelistName);
-    }
-    
-    public String getChangelistName() {
-        return (String)myAttributes.get(SVNProperty.CHANGELIST);
-    }
-    
-    public boolean setWorkingSize(long size) {
-        if (getKind() == SVNNodeKind.FILE) {
-            return setAttributeValue(SVNProperty.WORKING_SIZE, Long.toString(size));
-        }
-        return false;
-    }
-
-    public long getWorkingSize() {
-        String workingSize = (String)myAttributes.get(SVNProperty.WORKING_SIZE);
-        if (workingSize == null) {
-            return SVNProperty.WORKING_SIZE_UNKNOWN;
-        }
-        return Long.parseLong(workingSize);
-    }
-
-    public SVNDepth getDepth() {
-        String depthString = (String) myAttributes.get(SVNProperty.DEPTH);
-        return SVNDepth.fromString(depthString);
-    }
-
-    public void setDepth(SVNDepth depth) {
-        setAttributeValue(SVNProperty.DEPTH, depth.getName());
-    }
-    
     public boolean setURL(String url) {
         return setAttributeValue(SVNProperty.URL, url);
     }
 
     public void setIncomplete(boolean incomplete) {
-        setAttributeValue(SVNProperty.INCOMPLETE, incomplete ? Boolean.TRUE.toString() : null);
+        setAttributeValue(SVNProperty.INCOMPLETE,incomplete ? Boolean.TRUE.toString() : null);
     }
 
     public boolean isIncomplete() {
@@ -259,7 +220,7 @@ public class SVNEntry implements Comparable {
     public long getCommittedRevision() {
         String rev = (String)myAttributes.get(SVNProperty.COMMITTED_REVISION);
         if (rev == null) {
-            return SVNRepository.INVALID_REVISION ;
+            return -1;
         }
         return Long.parseLong(rev);
     }
@@ -366,7 +327,7 @@ public class SVNEntry implements Comparable {
     public long getCopyFromRevision() {
         String rev = (String)myAttributes.get(SVNProperty.COPYFROM_REVISION);
         if (rev == null) {
-            return SVNRepository.INVALID_REVISION;
+            return -1;
         }
         return Long.parseLong(rev);
     }
@@ -441,14 +402,6 @@ public class SVNEntry implements Comparable {
         }
     }
 
-    public void setKeepLocal(boolean keepLocal) {
-        setAttributeValue(SVNProperty.KEEP_LOCAL, keepLocal ? Boolean.TRUE.toString() : null);
-    }
-
-    public boolean isKeepLocal() {
-        return Boolean.TRUE.toString().equals(myAttributes.get(SVNProperty.KEEP_LOCAL));
-    }
-
     public String[] getCachableProperties() {
         return (String[])myAttributes.get(SVNProperty.CACHABLE_PROPS);
     }
@@ -461,47 +414,7 @@ public class SVNEntry implements Comparable {
         return myAttributes;
     }
     
-    public SVNAdminArea getAdminArea() {
-        return myAdminArea;
-    }
-    
-    public boolean isSwitched() throws SVNException {
-        File thisPath = getPath(); 
-        File parent = thisPath.getParentFile();
-        if (parent == null) {
-            return false;
-        }
-        
-        SVNWCAccess access = SVNWCAccess.newInstance(myAdminArea.getWCAccess());
-        SVNAdminArea parentAdminArea = null;
-        SVNEntry parentEntry = null;
-        try {
-            parentAdminArea = access.open(parent, false, 0);
-            parentEntry = parentAdminArea.getVersionedEntry(parentAdminArea.getThisDirName(), false);
-        } catch (SVNException svne) {
-            if (svne.getErrorMessage().getErrorCode() == SVNErrorCode.WC_NOT_DIRECTORY) {
-                return false;
-            } 
-            throw svne;
-        } finally {
-            access.close();
-        }
-        
-        SVNURL parentSVNURL = parentEntry.getSVNURL();
-        SVNURL thisSVNURL = getSVNURL(); 
-        if (parentSVNURL == null || thisSVNURL == null) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.ENTRY_MISSING_URL, "Cannot find a URL for ''{0}''", parentSVNURL == null ? parent : thisPath);
-            SVNErrorManager.error(err);
-        }
-        
-        SVNURL expectedSVNURL = parentSVNURL.appendPath(myName, false);
-        return !thisSVNURL.equals(expectedSVNURL);
-    }
-    
-    private File getPath() {
-        if (myPath == null) {
-            myPath = myAdminArea.getFile(myName);
-        }
-        return myPath;
+    public SVNEntry copy() {
+        return new SVNEntry(myAttributes, null, myName);
     }
 }

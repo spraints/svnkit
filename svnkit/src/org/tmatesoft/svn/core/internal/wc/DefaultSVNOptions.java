@@ -48,7 +48,6 @@ public class DefaultSVNOptions implements ISVNOptions, ISVNMergerFactory {
     private static final String AUTOPROPS_GROUP = "auto-props";
     private static final String SVNKIT_GROUP = "svnkit";
     private static final String OLD_SVNKIT_GROUP = "javasvn";
-    private static final String HELPERS_GROUP = "helpers";
     
     private static final String USE_COMMIT_TIMES = "use-commit-times";
     private static final String GLOBAL_IGNORES = "global-ignores";
@@ -56,8 +55,6 @@ public class DefaultSVNOptions implements ISVNOptions, ISVNMergerFactory {
     private static final String STORE_AUTH_CREDS = "store-auth-creds";
     private static final String KEYWORD_TIMEZONE = "keyword_timezone";
     private static final String KEYWORD_LOCALE = "keyword_locale";
-    private static final String EDITOR_CMD = "editor-cmd";
-    private static final String PRESERVED_CONFLICT_FILE_EXTENSIONS = "preserved-conflict-file-exts";
     
     private static final String DEFAULT_IGNORES = "*.o *.lo *.la #*# .*.rej *.rej .*~ *~ .#* .DS_Store";    
     private static final String YES = "yes";
@@ -221,10 +218,6 @@ public class DefaultSVNOptions implements ISVNOptions, ISVNMergerFactory {
         if (!myIsReadonly) {
             getConfigFile().save();
         }
-    }
-
-    public String getEditor() {
-        return getConfigFile().getPropertyValue(HELPERS_GROUP, EDITOR_CMD);
     }
 
     public void deleteAutoProperty(String pattern) {
@@ -450,21 +443,5 @@ public class DefaultSVNOptions implements ISVNOptions, ISVNMergerFactory {
             return null;
         }
         return new Locale(str.substring(0, 2), str.substring(3, 5), str.substring(6));
-    }
-
-    public String[] getPreservedConflictFileExtensions() {
-        String value = getConfigFile().getPropertyValue(MISCELLANY_GROUP, PRESERVED_CONFLICT_FILE_EXTENSIONS);
-        if (value == null) {
-            value = "";
-        }
-        Collection tokensList = new ArrayList();
-        for (StringTokenizer tokens = new StringTokenizer(value, " \t"); tokens.hasMoreTokens();) {
-            String token = tokens.nextToken();
-            if ("".equals(token)) {
-                continue;
-            }
-            tokensList.add(token);
-        }
-        return (String[]) tokensList.toArray(new String[tokensList.size()]);
     }
 }

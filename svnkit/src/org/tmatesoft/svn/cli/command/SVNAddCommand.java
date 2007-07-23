@@ -18,7 +18,6 @@ import java.io.PrintStream;
 
 import org.tmatesoft.svn.cli.SVNArgument;
 import org.tmatesoft.svn.cli.SVNCommand;
-import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.wc.SVNWCClient;
 
@@ -29,23 +28,11 @@ import org.tmatesoft.svn.core.wc.SVNWCClient;
 public class SVNAddCommand extends SVNCommand {
 
     public final void run(final PrintStream out, PrintStream err) throws SVNException {
-        SVNDepth depth = SVNDepth.UNKNOWN;
-        if (getCommandLine().hasArgument(SVNArgument.NON_RECURSIVE)) {
-            depth = SVNDepth.fromRecurse(false);
-        }
-        String depthStr = (String) getCommandLine().getArgumentValue(SVNArgument.DEPTH);
-        if (depthStr != null) {
-            depth = SVNDepth.fromString(depthStr);
-        }
-        if (depth == SVNDepth.UNKNOWN) {
-            depth = SVNDepth.INFINITY;
-        }
-        boolean recursive = SVNDepth.recurseFromDepth(depth);
+        final boolean recursive = !getCommandLine().hasArgument(SVNArgument.NON_RECURSIVE);
         boolean force = getCommandLine().hasArgument(SVNArgument.FORCE);
         boolean disableAutoProps = getCommandLine().hasArgument(SVNArgument.NO_AUTO_PROPS);
         boolean enableAutoProps = getCommandLine().hasArgument(SVNArgument.AUTO_PROPS);
-        boolean addParents = getCommandLine().hasArgument(SVNArgument.PARENTS);
-
+        
         getClientManager().setEventHandler(new SVNCommandEventProcessor(out, err, false));
         SVNWCClient wcClient = getClientManager().getWCClient();
 
@@ -59,7 +46,7 @@ public class SVNAddCommand extends SVNCommand {
         for (int i = 0; i < getCommandLine().getPathCount(); i++) {
             final String absolutePath = getCommandLine().getPathAt(i);
             matchTabsInPath(absolutePath, err);
-            wcClient.doAdd(new File(absolutePath), force, false, addParents, recursive, noIgnore);
+            wcClient.doAdd(new File(absolutePath), force, false, false, recursive, noIgnore);
         }
     }
     

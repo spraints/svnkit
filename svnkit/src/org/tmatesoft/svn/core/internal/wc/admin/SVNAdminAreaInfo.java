@@ -39,7 +39,7 @@ public class SVNAdminAreaInfo {
     private SVNWCAccess myAccess;
     private Map myExternals;
 
-    public SVNAdminAreaInfo(SVNWCAccess access, SVNAdminArea anchor, SVNAdminArea target, String targetName) {
+    protected SVNAdminAreaInfo(SVNWCAccess access, SVNAdminArea anchor, SVNAdminArea target, String targetName) {
         myAccess = access;
         myAnchor = anchor;
         myTarget = target;

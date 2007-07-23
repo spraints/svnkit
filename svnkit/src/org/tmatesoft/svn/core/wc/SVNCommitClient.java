@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -220,11 +219,6 @@ public class SVNCommitClient extends SVNBasicClient {
      */
     public SVNCommitInfo doDelete(SVNURL[] urls, String commitMessage)
             throws SVNException {
-        return doDelete(urls, commitMessage, null);
-    }
-    
-    public SVNCommitInfo doDelete(SVNURL[] urls, String commitMessage, Map revisionProperties)
-            throws SVNException {
         if (urls == null || urls.length == 0) {
             return SVNCommitInfo.NULL;
         }
@@ -268,7 +262,7 @@ public class SVNCommitClient extends SVNBasicClient {
             }
         }
         commitMessage = validateCommitMessage(commitMessage);
-        ISVNEditor commitEditor = repos.getCommitEditor(commitMessage, null, false, revisionProperties, null);
+        ISVNEditor commitEditor = repos.getCommitEditor(commitMessage, null, false, null);
         ISVNCommitPathHandler deleter = new ISVNCommitPathHandler() {
             public boolean handleCommitPath(String commitPath, ISVNEditor commitEditor) throws SVNException {
                 commitEditor.deleteEntry(commitPath, -1);
@@ -305,19 +299,6 @@ public class SVNCommitClient extends SVNBasicClient {
      *                          repositories
      */
     public SVNCommitInfo doMkDir(SVNURL[] urls, String commitMessage) throws SVNException {
-        return doMkDir(urls, commitMessage, null, false);
-    }
-    
-    public SVNCommitInfo doMkDir(SVNURL[] urls, String commitMessage, Map revisionProperties, boolean makeParents) throws SVNException {
-        if (makeParents) {
-            List allURLs = new LinkedList();
-            for (int i = 0; i < urls.length; i++) {
-                SVNURL url = urls[i];
-                addURLParents(allURLs, url);
-            }
-            urls = (SVNURL[]) allURLs.toArray(new SVNURL[allURLs.size()]);
-        }
-        
         if (urls == null || urls.length == 0) {
             return SVNCommitInfo.NULL;
         }
@@ -366,7 +347,7 @@ public class SVNCommitClient extends SVNBasicClient {
         paths = decodedPaths;
         SVNRepository repos = createRepository(rootURL, true);
         commitMessage = validateCommitMessage(commitMessage);
-        ISVNEditor commitEditor = repos.getCommitEditor(commitMessage, null, false, revisionProperties, null);
+        ISVNEditor commitEditor = repos.getCommitEditor(commitMessage, null, false, null);
         ISVNCommitPathHandler creater = new ISVNCommitPathHandler() {
             public boolean handleCommitPath(String commitPath, ISVNEditor commitEditor) throws SVNException {
                 commitEditor.addDir(commitPath, null, -1);
@@ -416,11 +397,6 @@ public class SVNCommitClient extends SVNBasicClient {
      *                          <li><code>path</code> contains a reserved name - <i>'.svn'</i>
      *                          </ul>
      */
-    /* TODO(sd): For consistency, this should probably take svn_depth_t
-     * depth instead of svn_boolean_t nonrecursive.  But it's not
-     * needed for the sparse-directories work right now, so leaving it
-     * alone.
-     */
     public SVNCommitInfo doImport(File path, SVNURL dstURL, String commitMessage, boolean recursive) throws SVNException {
         return doImport(path, dstURL, commitMessage, true, recursive);
     }
@@ -456,15 +432,6 @@ public class SVNCommitClient extends SVNBasicClient {
      *                          </ul>
      */
     public SVNCommitInfo doImport(File path, SVNURL dstURL, String commitMessage, boolean useGlobalIgnores, boolean recursive) throws SVNException {
-        return doImport(path, dstURL, commitMessage, null, useGlobalIgnores, recursive);
-    }
-    
-    /* TODO(sd): "For consistency, this should probably take svn_depth_t
-     * depth instead of svn_boolean_t nonrecursive.  But it's not
-     * needed for the sparse-directories work right now, so leaving it
-     * alone."
-     */
-    public SVNCommitInfo doImport(File path, SVNURL dstURL, String commitMessage, Map revisionProperties, boolean useGlobalIgnores, boolean recursive) throws SVNException {
         // first find dstURL root.
         SVNRepository repos = null;
         SVNFileType srcKind = SVNFileType.getType(path);
@@ -502,7 +469,7 @@ public class SVNCommitClient extends SVNBasicClient {
             return SVNCommitInfo.NULL;
         }
         commitMessage = validateCommitMessage(commitMessage);
-        ISVNEditor commitEditor = repos.getCommitEditor(commitMessage, null, false, revisionProperties, new SVNImportMediator());
+        ISVNEditor commitEditor = repos.getCommitEditor(commitMessage, null, false, new SVNImportMediator());
         String filePath = "";
         if (srcKind != SVNFileType.DIRECTORY) {
             filePath = (String) newPaths.remove(0);
@@ -575,25 +542,11 @@ public class SVNCommitClient extends SVNBasicClient {
      * @throws SVNException
      * @see	                    #doCommit(SVNCommitPacket, boolean, String) 
      */
-    /* TODO(sd): "For consistency, this should probably take svn_depth_t
-     * depth instead of svn_boolean_t recurse.  But it's not needed
-     * for the sparse-directories work right now, so leaving it alone
-     * for now, although note that this is a 1.5 API so revving it
-     * would be fairly painless."
-     */
     public SVNCommitInfo doCommit(File[] paths, boolean keepLocks, String commitMessage, boolean force, boolean recursive) throws SVNException {
-        return doCommit(paths, keepLocks, commitMessage, null, null, false, force, recursive);
-    }
-    
-    public SVNCommitInfo doCommit(File[] paths, boolean keepLocks, 
-            String commitMessage, Map revisionProperties, 
-            String changelistName, boolean keepChangelist, boolean force, 
-            boolean recursive) throws SVNException {
-        SVNCommitPacket packet = doCollectCommitItems(paths, keepLocks, force, 
-                recursive, changelistName);
+        SVNCommitPacket packet = doCollectCommitItems(paths, keepLocks, force, recursive);
         try {
             packet = packet.removeSkippedItems();
-            return doCommit(packet, keepLocks, keepChangelist, commitMessage, revisionProperties);
+            return doCommit(packet, keepLocks, commitMessage);
         } finally {
             if (packet != null) {
                 packet.dispose();
@@ -623,11 +576,7 @@ public class SVNCommitClient extends SVNBasicClient {
      * 
      */
     public SVNCommitInfo doCommit(SVNCommitPacket commitPacket, boolean keepLocks, String commitMessage) throws SVNException {
-        return doCommit(commitPacket, keepLocks, false, commitMessage, null);
-    }
-    
-    public SVNCommitInfo doCommit(SVNCommitPacket commitPacket, boolean keepLocks, boolean keepChangelist, String commitMessage, Map revisionProperties) throws SVNException {
-        SVNCommitInfo[] info = doCommit(new SVNCommitPacket[] {commitPacket}, keepLocks, keepChangelist, commitMessage, revisionProperties);
+        SVNCommitInfo[] info = doCommit(new SVNCommitPacket[] {commitPacket}, keepLocks, commitMessage);
         if (info != null && info.length > 0) {
             if (info[0].getErrorMessage() != null && info[0].getErrorMessage().getErrorCode() != SVNErrorCode.REPOS_POST_COMMIT_HOOK_FAILED) {
                 SVNErrorManager.error(info[0].getErrorMessage());
@@ -662,10 +611,6 @@ public class SVNCommitClient extends SVNBasicClient {
      * @throws SVNException
      */
     public SVNCommitInfo[] doCommit(SVNCommitPacket[] commitPackets, boolean keepLocks, String commitMessage) throws SVNException {
-        return doCommit(commitPackets, keepLocks, false, commitMessage, null);
-    }
-    
-    public SVNCommitInfo[] doCommit(SVNCommitPacket[] commitPackets, boolean keepLocks, boolean keepChangelist, String commitMessage, Map revisionProperties) throws SVNException {
         if (commitPackets == null || commitPackets.length == 0) {
             return new SVNCommitInfo[0];
         }
@@ -696,7 +641,7 @@ public class SVNCommitClient extends SVNBasicClient {
                 SVNCommitMediator mediator = new SVNCommitMediator(commitables);
                 tmpFiles = mediator.getTmpFiles();
                 String repositoryRoot = repository.getRepositoryRoot(true).getPath();
-                commitEditor = repository.getCommitEditor(commitMessage, lockTokens, keepLocks, revisionProperties, mediator);
+                commitEditor = repository.getCommitEditor(commitMessage, lockTokens, keepLocks, mediator);
                 // commit.
                 // set event handler for each wc access.
                 for (int i = 0; i < commitPacket.getCommitItems().length; i++) {
@@ -746,10 +691,9 @@ public class SVNCommitClient extends SVNBasicClient {
                                 if (parentDir != null) {
                                     SVNEntry entryInParent = parentDir.getEntry(nameInParent, true);
                                     if (entryInParent != null) {
-                                        Map attributes = new HashMap();
-                                        attributes.put(SVNProperty.SCHEDULE, null);
-                                        attributes.put(SVNProperty.DELETED, Boolean.TRUE.toString());
-                                        parentDir.modifyEntry(nameInParent, attributes, true, true);
+                                        entryInParent.unschedule();
+                                        entryInParent.setDeleted(true);
+                                        parentDir.saveEntries(false);
                                     }
                                 }
                             }
@@ -769,7 +713,7 @@ public class SVNCommitClient extends SVNBasicClient {
                     boolean removeLock = !keepLocks && item.isLocked();
                     // update entry in dir.
                     Map wcPropChanges = mediator.getWCProperties(item);
-                    dir.commit(target, info, wcPropChanges, removeLock, recurse, !keepChangelist, explicitCommitPaths, getCommitParameters());
+                    dir.commit(target, info, wcPropChanges, removeLock, recurse, explicitCommitPaths, getCommitParameters());
                     processedItems.add(path);
                 } 
                 needsSleepForTimeStamp = true;
@@ -779,7 +723,8 @@ public class SVNCommitClient extends SVNBasicClient {
                 if (e instanceof SVNCancelException) {
                     throw e;
                 }
-                SVNErrorMessage err = e.getErrorMessage().wrap("Commit failed (details follow):");
+                SVNErrorMessage err = SVNErrorMessage.create(e.getErrorMessage().getErrorCode(), "Commit failed (details follow):");
+                err.setChildErrorMessage(e.getErrorMessage());
                 infos.add(new SVNCommitInfo(-1, null, null, err));
                 dispatchEvent(new SVNEvent(err), ISVNEventHandler.UNKNOWN);
                 continue;
@@ -835,13 +780,7 @@ public class SVNCommitClient extends SVNBasicClient {
      * @throws SVNException
      * @see	                    SVNCommitItem
      */
-    //TODO(sd): to be updated...
     public SVNCommitPacket doCollectCommitItems(File[] paths, boolean keepLocks, boolean force, boolean recursive) throws SVNException {
-        return doCollectCommitItems(paths, keepLocks, force, recursive, null);
-    }
-    
-    public SVNCommitPacket doCollectCommitItems(File[] paths, boolean keepLocks, boolean force, 
-            boolean recursive, String changelistName) throws SVNException {
         if (paths == null || paths.length == 0) {
             return SVNCommitPacket.EMPTY;
         }
@@ -864,10 +803,7 @@ public class SVNCommitClient extends SVNBasicClient {
         try {
             Map lockTokens = new HashMap();
             checkCancelled();
-            SVNCommitItem[] commitItems = SVNCommitUtil.harvestCommitables(wcAccess, targets, 
-                    lockTokens, !keepLocks, recursive, 
-                    force, changelistName, 
-                    getCommitParameters());
+            SVNCommitItem[] commitItems = SVNCommitUtil.harvestCommitables(wcAccess, targets, lockTokens, !keepLocks, recursive, force, getCommitParameters());
             boolean hasModifications = false;
             checkCancelled();
             for (int i = 0; commitItems != null && i < commitItems.length; i++) {
@@ -925,14 +861,7 @@ public class SVNCommitClient extends SVNBasicClient {
      * @throws SVNException
      * @see                     SVNCommitItem
      */
-    //TODO(sd): to be updated...
     public SVNCommitPacket[] doCollectCommitItems(File[] paths, boolean keepLocks, boolean force, boolean recursive, boolean combinePackets) throws SVNException {
-        return doCollectCommitItems(paths, keepLocks, force, recursive, combinePackets, null);
-    }
-    
-    public SVNCommitPacket[] doCollectCommitItems(File[] paths, boolean keepLocks, 
-            boolean force, boolean recursive, 
-            boolean combinePackets, String changelistName) throws SVNException {
         if (paths == null || paths.length == 0) {
             return new SVNCommitPacket[0];
         }
@@ -960,7 +889,7 @@ public class SVNCommitClient extends SVNBasicClient {
             try {
                 checkCancelled();
                 Map lockTokens = new HashMap();
-                SVNCommitItem[] commitItems = SVNCommitUtil.harvestCommitables(wcAccess, targetPaths, lockTokens, !keepLocks, recursive, force, changelistName, getCommitParameters());
+                SVNCommitItem[] commitItems = SVNCommitUtil.harvestCommitables(wcAccess, targetPaths, lockTokens, !keepLocks, recursive, force, getCommitParameters());
                 checkCancelled();
                 boolean hasModifications = false;
                 for (int j = 0; commitItems != null && j < commitItems.length; j++) {
@@ -1058,16 +987,6 @@ public class SVNCommitClient extends SVNBasicClient {
             SVNErrorManager.error(err, e);
         }
         return packetsArray;        
-    }
-
-    private void addURLParents(List targets, SVNURL url) throws SVNException {
-        SVNURL parentURL = url.removePathTail();
-        SVNRepository repos = createRepository(parentURL, true);
-        SVNNodeKind kind = repos.checkPath("", SVNRepository.INVALID_REVISION);
-        if (kind == SVNNodeKind.NONE) {
-            addURLParents(targets, parentURL);
-        }
-        targets.add(url);
     }
 
     private boolean importDir(SVNDeltaGenerator deltaGenerator, File rootFile, File dir, String importPath, boolean useGlobalIgnores, boolean recursive, ISVNEditor editor) throws SVNException {

@@ -16,7 +16,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
 
-import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNErrorCode;
 import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
@@ -173,20 +172,20 @@ public abstract class SVNAdminAreaFactory implements Comparable {
         return -1;
     }
 
-    public static void createVersionedDirectory(File path, String url, String rootURL, String uuid, long revNumber, SVNDepth depth) throws SVNException {
+    public static void createVersionedDirectory(File path, String url, String rootURL, String uuid, long revNumber) throws SVNException {
         if (!ourFactories.isEmpty()) {
             if (!checkAdminAreaExists(path, url, revNumber)) {
                 Collection enabledFactories = getSelector().getEnabledFactories(path, ourFactories, true);
                 if (!enabledFactories.isEmpty()) {
                     SVNAdminAreaFactory newestFactory = (SVNAdminAreaFactory) enabledFactories.iterator().next();
-                    newestFactory.doCreateVersionedDirectory(path, url, rootURL, uuid, revNumber, depth);
+                    newestFactory.doCreateVersionedDirectory(path, url, rootURL, uuid, revNumber);
                 }
             }
         }
     }
 
-    public static void createVersionedDirectory(File path, SVNURL url, SVNURL rootURL, String uuid, long revNumber, SVNDepth depth) throws SVNException {
-        createVersionedDirectory(path, url != null ? url.toString() : null, rootURL != null ? rootURL.toString() : null, uuid, revNumber, depth);
+    public static void createVersionedDirectory(File path, SVNURL url, SVNURL rootURL, String uuid, long revNumber) throws SVNException {
+        createVersionedDirectory(path, url != null ? url.toString() : null, rootURL != null ? rootURL.toString() : null, uuid, revNumber);
     }
         
     private static boolean checkAdminAreaExists(File dir, String url, long revision) throws SVNException {
@@ -208,13 +207,12 @@ public abstract class SVNAdminAreaFactory implements Comparable {
         
         if (wcExists) {
             SVNWCAccess wcAccess = SVNWCAccess.newInstance(null);
-            SVNAdminArea adminArea = null;
-            SVNEntry entry = null;
-            try {
-                adminArea = wcAccess.open(dir, false, 0);
-                entry = adminArea.getVersionedEntry(adminArea.getThisDirName(), false);
-            } finally {
-                wcAccess.closeAdminArea(dir);
+            SVNAdminArea adminArea = wcAccess.open(dir, false, 0);
+            SVNEntry entry = adminArea.getEntry(adminArea.getThisDirName(), false);
+            wcAccess.closeAdminArea(dir);
+            if (entry == null) {
+                SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.ENTRY_NOT_FOUND, "No entry for ''{0}''", dir);
+                SVNErrorManager.error(err);
             }
             if (!entry.isScheduledForDeletion()) {
                 if (entry.getRevision() != revision) {
@@ -238,8 +236,8 @@ public abstract class SVNAdminAreaFactory implements Comparable {
 
     protected abstract SVNAdminArea doUpgrade(SVNAdminArea area) throws SVNException;
 
-    protected abstract void doCreateVersionedDirectory(File path, String url, String rootURL, String uuid, long revNumber, SVNDepth depth) throws SVNException;
-
+    protected abstract void doCreateVersionedDirectory(File path, String url, String rootURL, String uuid, long revNumber) throws SVNException;
+    
     protected abstract int doCheckWC(File path) throws SVNException;
 
     protected static void registerFactory(SVNAdminAreaFactory factory) {

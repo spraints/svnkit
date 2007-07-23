@@ -117,7 +117,6 @@ public class SVNEvent {
     private File myRoot;
     private File myRootFile;
     private SVNEventAction myExpectedAction;
-    private String myChangelistName;
     
     /**
      * Constructs an <b>SVNEvent</b> object given
@@ -455,13 +454,4 @@ public class SVNEvent {
     public void setPath(String path) {
         myPath = path;
     }
-    
-    public void setChangelistName(String changelistName) {
-        myChangelistName = changelistName;
-    }
-    
-    public String getChangelistName() {
-        return myChangelistName;
-    }
-    
 }

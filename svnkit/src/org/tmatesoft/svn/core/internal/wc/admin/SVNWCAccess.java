@@ -491,16 +491,6 @@ public class SVNWCAccess implements ISVNEventHandler {
         return null;
     }
     
-    public SVNEntry getVersionedEntry(File path, boolean showHidden) throws SVNException {
-        SVNEntry entry = getEntry(path, showHidden);
-        if (entry == null) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.ENTRY_NOT_FOUND, "''{0}'' is not under version control", path);
-            SVNErrorManager.error(err);
-        }
-        return entry;
-
-    }
-    
     public void setRepositoryRoot(File path, SVNURL reposRoot) throws SVNException {
         SVNEntry entry = getEntry(path, false);
         if (entry == null) {
@@ -572,7 +562,7 @@ public class SVNWCAccess implements ISVNEventHandler {
         return adminArea;
     }
 
-    public static SVNExternalInfo[] parseExternals(String rootPath, String externals) throws SVNException {
+    public static SVNExternalInfo[] parseExternals(String rootPath, String externals) {
         Collection result = new ArrayList();
         if (externals == null) {
             return (SVNExternalInfo[]) result.toArray(new SVNExternalInfo[result.size()]);
@@ -627,7 +617,6 @@ public class SVNWCAccess implements ISVNEventHandler {
                 if ("".equals(rootPath) && ((String) parts.get(0)).startsWith("/")) {
                     path = "/" + path;
                 }
-                SVNExternalInfo.checkPath(path);
                 try {
                     url = SVNURL.parseURIEncoded(url).toString();
                 } catch (SVNException e) {

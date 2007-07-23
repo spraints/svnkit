@@ -362,7 +362,7 @@ public class SVNProperties {
         } finally {
             SVNFileUtil.closeFile(dst);
         }
-        if (tmpFile != null && target != null) {
+        if (tmpFile != null) {
             SVNFileUtil.rename(tmpFile, target);
             SVNFileUtil.setReadonly(target, true);
         }

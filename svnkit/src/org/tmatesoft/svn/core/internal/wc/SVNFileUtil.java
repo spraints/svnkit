@@ -61,8 +61,6 @@ public class SVNFileUtil {
     public final static boolean isOSX;
     public final static boolean isOpenVMS;
 
-    public static final int STREAM_CHUNK_SIZE = 16384;
-
     public final static OutputStream DUMMY_OUT = new OutputStream() {
 
         public void write(int b) throws IOException {
@@ -118,30 +116,6 @@ public class SVNFileUtil {
         ENV_COMMAND = props.getProperty(prefix + "env", "env");
     }
 
-    public static String readFile(File file) throws SVNException {
-        InputStream is = null;
-        try {
-            is = openFileForReading(file);
-            return readFile(is);
-        } catch (IOException ioe) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Can not read from file ''{0}'': {1}", new Object[] {file, ioe.getLocalizedMessage()});
-            SVNErrorManager.error(err);
-        } finally { 
-            closeFile(is);
-        }
-        return null;
-    }
-    
-    public static String readFile(InputStream input) throws IOException {
-        byte[] buf = new byte[STREAM_CHUNK_SIZE];
-        StringBuffer result = new StringBuffer();
-        int r = -1;
-        while ((r = input.read(buf)) != -1) {
-            result.append(new String(buf, 0, r, "UTF-8"));
-        }
-        return result.toString();
-    }
-    
     public static String getBasePath(File file) {
         File base = file.getParentFile();
         while (base != null) {
@@ -164,7 +138,7 @@ public class SVNFileUtil {
         return path;
     }
 
-    public static void createEmptyFile(File file) throws SVNException {
+    public static boolean createEmptyFile(File file) throws SVNException {
         boolean created;
         if (file != null && file.getParentFile() != null && !file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
@@ -178,34 +152,7 @@ public class SVNFileUtil {
             SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot create new file ''{0}''", file);
             SVNErrorManager.error(err);
         }
-    }
-
-    /**
-     * An internal method for ASCII bytes to write only!
-     * 
-     * @param file
-     * @param contents
-     * @throws SVNException
-     */
-    public static void createFile(File file, String contents) throws SVNException {
-        createEmptyFile(file);
-        if (contents == null || contents.length() == 0) {
-            return;
-        }
-        
-        OutputStream os = null;
-        try {
-            os = SVNFileUtil.openFileForWriting(file); 
-            os.write(contents.getBytes());
-        } catch (IOException ioe) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Can not write to file ''{0}'': {1}", new Object[] {file, ioe.getLocalizedMessage()});
-            SVNErrorManager.error(err, ioe);
-        } catch (SVNException svne) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Can not write to file ''{0}''", file);
-            SVNErrorManager.error(err, svne);
-        } finally {
-            SVNFileUtil.closeFile(os);
-        }
+        return created;
     }
 
     public static File createUniqueFile(File parent, String name, String suffix) throws SVNException {
@@ -983,7 +930,7 @@ public class SVNFileUtil {
             return null;
         }
         if (!file.isFile() || !file.canRead()) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from ''{0}'': path refers to directory or read access is denied", file);
+            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from to ''{0}'': path refers to directory or read access is denied", file);
             SVNErrorManager.error(err);
         }
         if (!file.exists()) {
@@ -992,7 +939,7 @@ public class SVNFileUtil {
         try {
             return new BufferedInputStream(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from ''{0}'': {1}", new Object[] {
+            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from to ''{0}'': {1}", new Object[] {
                     file, e.getLocalizedMessage()
             });
             SVNErrorManager.error(err, e);
@@ -1005,7 +952,7 @@ public class SVNFileUtil {
             return null;
         }
         if (!file.isFile() || !file.canRead()) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from ''{0}'': path refers to directory or read access is denied", file);
+            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from to ''{0}'': path refers to directory or read access is denied", file);
             SVNErrorManager.error(err);
         }
         if (!file.exists()) {
@@ -1015,7 +962,7 @@ public class SVNFileUtil {
         try {
             return new SVNInputFileChannel(file);
         } catch (FileNotFoundException e) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from ''{0}'': {1}", new Object[] {
+            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot read from to ''{0}'': {1}", new Object[] {
                     file, e.getLocalizedMessage()
             });
             SVNErrorManager.error(err, e);
@@ -1281,7 +1228,7 @@ public class SVNFileUtil {
         try {
             tmpFile = File.createTempFile("svnkit" + name, ".tmp");
         } catch (IOException e) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot create temporary directory: {0}", e.getLocalizedMessage());
+            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot create temporary directory: {1}", e.getLocalizedMessage());
             SVNErrorManager.error(err, e);
         }
         if (tmpFile.exists()) {
@@ -1299,7 +1246,7 @@ public class SVNFileUtil {
             }
             tmpFile = File.createTempFile(prefix, suffix);
         } catch (IOException e) {
-            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot create temporary file: {0}", e.getLocalizedMessage());
+            SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.IO_ERROR, "Cannot create temporary file: {1}", e.getLocalizedMessage());
             SVNErrorManager.error(err, e);
         }
         return tmpFile;
