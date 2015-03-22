@@ -41,7 +41,7 @@ public class SVNPasswordAuthentication extends SVNAuthentication {
      * @param url              url these credentials are applied to
      * @param isPartial        whether this object only contains part of credentials information
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static SVNPasswordAuthentication newInstance(String userName, char[] password, boolean storageAllowed, SVNURL url, boolean isPartial) {
         return new SVNPasswordAuthentication(userName, password, storageAllowed, url, isPartial);
@@ -100,7 +100,7 @@ public class SVNPasswordAuthentication extends SVNAuthentication {
     /**
      * Returns password. 
      *
-     * @since 1.8.9
+     * @since 1.7.14
      * @return password
      */
     public char[] getPasswordValue() {

@@ -76,7 +76,7 @@ public class DefaultSVNAuthenticationManager implements ISVNAuthenticationManage
     /**
      * Creates an instance of {@link DefaultSVNAuthenticationManager}
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public DefaultSVNAuthenticationManager(File configDirectory, boolean storeAuth, String userName, char[] password, File privateKey, char[] passphrase) {
         myIsStoreAuth = storeAuth;
@@ -240,7 +240,7 @@ public class DefaultSVNAuthenticationManager implements ISVNAuthenticationManage
      * Control whether to dismiss credentials sensitive data once
      * credentials object has been used. Default is not to dismiss.
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      * @param dismiss whether to dismiss data.
      */
     public void setDismissSensitiveDataUponUse(boolean dismiss) {
@@ -251,7 +251,7 @@ public class DefaultSVNAuthenticationManager implements ISVNAuthenticationManage
      * Returns whether this authenticaiton manager dismiss sensitive data
      * once credentials object has been used. Default is not to dismiss.
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      * @return
      */
     public boolean isDismissSensitiveDataUponUse() {
@@ -637,7 +637,7 @@ public class DefaultSVNAuthenticationManager implements ISVNAuthenticationManage
      * Dismiss cached sensitive data (e.g. password)
      * Calling this method clears explicit and cached credentials stored in this authentication manager.
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public void dismissSensitiveData() {
         if (myRuntimeAuthStorage instanceof RuntimeStorage) {

@@ -124,7 +124,7 @@ public class SVNAuthentication {
     /**
      * Disposes sensitive data (e.g. password) stored in this object.
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public void dismissSensitiveData() {
     }
@@ -132,7 +132,7 @@ public class SVNAuthentication {
     /**
      * Creates a deep copy of this credentials object. Sensitive data (e.g. password) is copied too.
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      * @return copy of this object.
      */
     public SVNAuthentication copy() {

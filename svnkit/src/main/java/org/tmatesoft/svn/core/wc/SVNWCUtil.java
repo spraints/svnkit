@@ -104,7 +104,7 @@ public class SVNWCUtil {
      * @return a default implementation of the credentials and servers
      *         configuration driver interface
      *         
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static ISVNAuthenticationManager createDefaultAuthenticationManager(String userName, char[] password) {
         return createDefaultAuthenticationManager(null, userName, password);
@@ -135,7 +135,7 @@ public class SVNWCUtil {
      * @return a default implementation of the credentials and servers
      *         configuration driver interface
      *         
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static ISVNAuthenticationManager createDefaultAuthenticationManager(File configDir, String userName, char[] password) {
         DefaultSVNOptions options = createDefaultOptions(configDir, true);
@@ -170,7 +170,7 @@ public class SVNWCUtil {
      * @return a default implementation of the credentials and servers
      *         configuration driver interface
      *         
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static ISVNAuthenticationManager createDefaultAuthenticationManager(File configDir, String userName, char[] password, boolean storeAuth) {
         return createDefaultAuthenticationManager(configDir, userName, password, null, null, storeAuth);
@@ -205,7 +205,7 @@ public class SVNWCUtil {
      * @return a default implementation of the credentials and servers
      *         configuration driver interface
      *         
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static ISVNAuthenticationManager createDefaultAuthenticationManager(File configDir, String userName, char[] password, File privateKey, char[] passphrase, boolean storeAuth) {
         // check whether we are running inside Eclipse.

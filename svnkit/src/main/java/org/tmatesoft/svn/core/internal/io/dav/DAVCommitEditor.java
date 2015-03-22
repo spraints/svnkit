@@ -50,6 +50,7 @@ import org.tmatesoft.svn.util.SVNLogType;
  */
 class DAVCommitEditor implements ISVNEditor {
     
+//    private String myLogMessage;
     private DAVConnection myConnection;
     private SVNURL myLocation;
 	private DAVRepository myRepository;
@@ -62,8 +63,7 @@ class DAVCommitEditor implements ISVNEditor {
     private Map myFilesMap;
     private String myBaseChecksum;
     private SVNProperties myRevProps;
-    private String myActivityLocation;
-
+    
     public DAVCommitEditor(DAVRepository repository, DAVConnection connection, String message, ISVNWorkspaceMediator mediator, Runnable closeCallback) {
         this(repository, connection, (SVNProperties) null, mediator, closeCallback);
         myRevProps = new SVNProperties();
@@ -94,9 +94,7 @@ class DAVCommitEditor implements ISVNEditor {
 
     public void openRoot(long revision) throws SVNException {
         // make activity
-        final String[] activityUrls = createActivity();
-        myActivity = activityUrls[0];
-        myActivityLocation = activityUrls[1];
+        myActivity = createActivity();
         DAVResource root = new DAVResource(myCommitMediator, myConnection, "", revision);
         root.fetchVersionURL(null, false);
         myDirsStack.push(root);
@@ -385,8 +383,6 @@ class DAVCommitEditor implements ISVNEditor {
 		        resource.dispose();
 		    }
 		    DAVMergeHandler handler = new DAVMergeHandler(myCommitMediator, myPathsMap);
-            patchResourceProperties(myActivityLocation, myRevProps);
-
 		    HTTPStatus status = myConnection.doMerge(myActivity, true, handler);
 		    if (status.getError() != null) {
                 // DELETE shouldn't be called anymore if there is an error or MERGE.
@@ -450,7 +446,7 @@ class DAVCommitEditor implements ISVNEditor {
         }
     }
     
-    private String[] createActivity() throws SVNException {
+    private String createActivity() throws SVNException {
         String activity = myConnection.doMakeActivity(myCommitMediator);
         // checkout head...
         String path = SVNEncodingUtil.uriEncode(myLocation.getPath());
@@ -468,36 +464,24 @@ class DAVCommitEditor implements ISVNEditor {
                 }
             }
         }
-        final String location = status.getHeader().getFirstHeaderValue(HTTPHeader.LOCATION_HEADER);
+        String location = status.getHeader().getFirstHeaderValue(HTTPHeader.LOCATION_HEADER);
         if (location == null) {
             SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_DAV_REQUEST_FAILED, "The CHECKOUT response did not contain a 'Location:' header");
             SVNErrorManager.error(err, SVNLogType.NETWORK);
         }
-        if (myRevProps != null) {
-            final SVNPropertyValue authorRevisionProperty = myRevProps.remove(SVNRevisionProperty.AUTHOR);
-            patchResourceProperties(location, myRevProps);
-            if (authorRevisionProperty != null) {
-                myRevProps = new SVNProperties();
-                myRevProps.put(SVNRevisionProperty.AUTHOR, authorRevisionProperty);
-            } else {
-                myRevProps = null;
-            }
-        }
-        return new String[] {activity, location};
-    }
-
-    private void patchResourceProperties(String path, SVNProperties properties) throws SVNException {
-        if (properties != null && properties.size() > 0) {
-            final StringBuffer request = DAVProppatchHandler.generatePropertyRequest(null, properties);
+        if (myRevProps != null && myRevProps.size() > 0) {
+            StringBuffer request = DAVProppatchHandler.generatePropertyRequest(null, myRevProps);
+            SVNErrorMessage context = null;//SVNErrorMessage.create(SVNErrorCode.RA_DAV_REQUEST_FAILED, "applying log message to {0}", path);
             try {
-                myConnection.doProppatch(null, path, request, null, null);
+                myConnection.doProppatch(null, location, request, null, context);
             } catch (SVNException e) {
                 SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.RA_DAV_REQUEST_FAILED, "applying log message to {0}", path);
                 SVNErrorManager.error(err, SVNLogType.NETWORK);
             }
         }
+        return activity;
     }
-
+    
     private void checkoutResource(DAVResource resource, boolean allow404) throws SVNException {
         if (resource.getWorkingURL() != null) {
             return;

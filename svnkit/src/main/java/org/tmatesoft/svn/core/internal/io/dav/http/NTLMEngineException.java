@@ -12,6 +12,7 @@ public class NTLMEngineException extends IOException {
     }
 
     public NTLMEngineException(String message, Exception cause) {
-        super(message, cause);
+        super(message);
+        initCause(cause);
     }
 }

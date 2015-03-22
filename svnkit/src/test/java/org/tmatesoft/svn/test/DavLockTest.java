@@ -265,7 +265,7 @@ public class DavLockTest {
             setLock.setSingleTarget(SvnTarget.fromFile(file));
             setLock.run();
 
-            //TODO: lap the test
+            //TODO: finish the test
         } finally {
             svnOperationFactory.dispose();
             sandbox.dispose();

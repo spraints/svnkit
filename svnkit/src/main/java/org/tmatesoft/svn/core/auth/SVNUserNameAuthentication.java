@@ -35,7 +35,7 @@ public class SVNUserNameAuthentication extends SVNAuthentication {
      *                         global auth cache, otherwise not
      * @param url              url these credentials are applied to
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static SVNUserNameAuthentication newInstance(String userName, boolean storageAllowed, SVNURL url, boolean isPartial) {
         return new SVNUserNameAuthentication(userName, storageAllowed, url, isPartial);        

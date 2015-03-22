@@ -46,7 +46,7 @@ public class SVNSSHAuthentication extends SVNAuthentication {
      *                         global auth cache, otherwise not
      * @param url              url these credentials are applied to
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static SVNSSHAuthentication newInstance(String userName, char[] password, int portNumber, boolean storageAllowed, SVNURL url, boolean isPartial) {
         return new SVNSSHAuthentication(userName, password, null, null, null, null, portNumber, storageAllowed, url, isPartial);
@@ -64,7 +64,7 @@ public class SVNSSHAuthentication extends SVNAuthentication {
      *                         global auth cache, otherwise not
      * @param url              url these credentials are applied to
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static SVNSSHAuthentication newInstance(String userName, File keyFile, char[] passphrase, int portNumber, boolean storageAllowed, SVNURL url, boolean isPartial) {
         return new SVNSSHAuthentication(userName, null, keyFile, null, passphrase, null, portNumber, storageAllowed, url, isPartial);
@@ -82,7 +82,7 @@ public class SVNSSHAuthentication extends SVNAuthentication {
      *                         global auth cache, otherwise not
      * @param url              url these credentials are applied to
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static SVNSSHAuthentication newInstance(String userName, char[] keyValue, char[] passphrase, int portNumber, boolean storageAllowed, SVNURL url, boolean isPartial) {
         return new SVNSSHAuthentication(userName, null, null, keyValue, passphrase, null, portNumber, storageAllowed, url, isPartial);
@@ -96,7 +96,7 @@ public class SVNSSHAuthentication extends SVNAuthentication {
      * @param portNumber       the number of a port to establish an ssh tunnel over  
      * @param url              url these credentials are applied to
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static SVNSSHAuthentication newInstance(String userName, AgentProxy agentProxy, int portNumber, SVNURL url, boolean isPartial) {
         return new SVNSSHAuthentication(userName, null, null, null, null, agentProxy, portNumber, false, url, isPartial);
@@ -187,7 +187,7 @@ public class SVNSSHAuthentication extends SVNAuthentication {
     /**
      * Returns password. This is used when an ssh private key is not used. 
      *
-     * @since 1.8.9
+     * @since 1.7.14
      * @return password
      */
     public char[] getPasswordValue() {
@@ -209,7 +209,7 @@ public class SVNSSHAuthentication extends SVNAuthentication {
     /**
      * Returns the password to the ssh private key.
      *  
-     * @since 1.8.9
+     * @since 1.7.14
      * @return the password to the private key
      * @see    #getPrivateKeyFile()
      */

@@ -10,12 +10,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.tmatesoft.svn.util.SVNDebugLog;
+import org.tmatesoft.svn.util.SVNLogType;
+
 public class SshHost {
     
-    private static final int CONNECTION_INACTIVITY_TIMEOUT = Integer.parseInt(System.getProperty("svnkit.ssh.connection.inactivity.timeout.secs", "600")) * 1000; // 10 minutes
-    private static final int MAX_CONCURRENT_OPENERS = Integer.parseInt(System.getProperty("svnkit.ssh.max.concurrent.connection.openers", "3"));
-    private static final int MAX_SESSIONS_PER_CONNECTION = Integer.parseInt(System.getProperty("svnkit.ssh.max.sessions.per.connection", "8"));
-
+    private static final long CONNECTION_INACTIVITY_TIMEOUT = 60*1000*10; // 10 minutes
+    private static final long MAX_CONCURRENT_OPENERS = 3;
+    private static final int MAX_SESSIONS_PER_CONNECTION = 8;
+    
     private String myHost;
     private int myPort;
     private ServerHostKeyVerifier myHostVerifier;
@@ -185,12 +188,17 @@ public class SshHost {
                         return connection.openSession();
                     } catch (IOException e) {
                         // this connection has been closed by server.
-                        if (e.getMessage() != null && e.getMessage().contains("connection is closed")) {
-                            connection.close();
-                            connections.remove();
-                        } else {
-                            throw e;
-                        }
+                        if (e.getMessage() != null) {
+                            final String message = e.getMessage();
+                            if (message.contains("connection is closed") 
+                                    || message.contains("connection is being shutdown")) {
+                                SVNDebugLog.getDefaultLog().logFinest(SVNLogType.NETWORK, "SSH connection has been unexpectedly closed");
+                                connection.close();
+                                connections.remove();
+                                return null;
+                            }
+                        } 
+                        throw e;
                     }
                 }
             }

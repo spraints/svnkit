@@ -12,16 +12,13 @@ import org.tmatesoft.svn.core.wc.DefaultSVNDiffGenerator;
 import org.tmatesoft.svn.core.wc.ISVNDiffGenerator;
 import org.tmatesoft.svn.core.wc2.SvnTarget;
 
-public class SvnNewDiffGenerator implements ISVNDiffGenerator, ISvnPropertiesDiffHandler {
+public class SvnNewDiffGenerator implements ISVNDiffGenerator {
 
     private final ISvnDiffGenerator generator;
     private boolean diffDeleted;
     private boolean diffAdded;
     private boolean diffCopied;
     private boolean diffUnversioned;
-
-    private SVNProperties lastOriginalProperties;
-    private SVNProperties lastPropChanges;
 
     public SvnNewDiffGenerator(ISvnDiffGenerator generator) {
         this.generator = generator;
@@ -119,13 +116,8 @@ public class SvnNewDiffGenerator implements ISVNDiffGenerator, ISvnPropertiesDif
         generator.displayPropsChanged(getTarget(path), "", "", false, baseProps, diff, result);
     }
 
-    public void handlePropertiesDiff(SVNProperties originalProperties, SVNProperties propChanges) {
-        lastOriginalProperties = originalProperties;
-        lastPropChanges = originalProperties;
-    }
-
     public void displayFileDiff(String path, File file1, File file2, String rev1, String rev2, String mimeType1, String mimeType2, OutputStream result) throws SVNException {
-        generator.displayContentChanged(getTarget(path), file1, file2, rev1, rev2, mimeType1, mimeType2, SvnDiffCallback.OperationKind.Modified, null, lastOriginalProperties, lastPropChanges, result);
+        generator.displayContentChanged(getTarget(path), file1, file2, rev1, rev2, mimeType1, mimeType2, SvnDiffCallback.OperationKind.Modified, null, result);
     }
 
     public void displayDeletedDirectory(String path, String rev1, String rev2) throws SVNException {

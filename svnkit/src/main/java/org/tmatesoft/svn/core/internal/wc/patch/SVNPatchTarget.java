@@ -239,9 +239,8 @@ public class SVNPatchTarget {
                     String author = entry.getAuthor();
                     String changed_date = entry.getCommittedDate();
                     String url = entry.getURL();
-                    String repositoryRoot = entry.getRepositoryRoot();
                     String rev_str = Long.toString(changed_rev);
-                    new_target.keywords = SVNTranslator.computeKeywords(keywords_val, url, repositoryRoot, author, changed_date, rev_str, wc.getWCAccess().getOptions());
+                    new_target.keywords = SVNTranslator.computeKeywords(keywords_val, url, author, changed_date, rev_str, wc.getWCAccess().getOptions());
                 }
 
                 String eol_style_val = props.getStringPropertyValue(SVNProperty.EOL_STYLE);
@@ -453,7 +452,7 @@ public class SVNPatchTarget {
         return;
     }
 
-    public static boolean isChildPath(final File baseFile, final File file) throws IOException {
+    private boolean isChildPath(final File baseFile, final File file) throws IOException {
         if (null != file && baseFile != null) {
             final String basePath = baseFile.getCanonicalPath();
             final File childFile = new File(basePath, file.getPath());
@@ -485,14 +484,14 @@ public class SVNPatchTarget {
         return null;
     }
 
-    public static File stripPath(File path, int stripCount) {
+    private File stripPath(File path, int stripCount) {
         if (path != null && stripCount > 0) {
             final String[] components = decomposePath(path);
             final StringBuffer buf = new StringBuffer();
-            if (stripCount <= components.length) {
+            if (stripCount > components.length) {
                 for (int i = stripCount; i < components.length; i++) {
                     if (i > stripCount) {
-                        buf.append(File.separatorChar);
+                        buf.append(File.pathSeparator);
                     }
                     buf.append(components[i]);
                 }
@@ -815,12 +814,7 @@ public class SVNPatchTarget {
     }
 
     public static String[] decomposePath(File path) {
-        String pathString = SVNFileUtil.getFilePath(path);
-        if (pathString.endsWith("/")) {
-            pathString = pathString.substring(0, pathString.length() - 1);
-        }
-
-        return pathString.split(String.valueOf(File.separatorChar));
+        return SVNAdminArea.fromString(path.getPath(), File.pathSeparator);
     }
 
     /**
@@ -1215,6 +1209,7 @@ public class SVNPatchTarget {
                     action = SVNEventAction.PATCH_APPLIED_HUNK;
                 }
 
+                //TODO: propertyName should be set in notify2
                 final SVNEvent notify2 = SVNEventFactory.createSVNEvent(target.absPath != null ? target.absPath : target.relPath, target.kind, null, 0, action, null, null, null);
                 notify2.setInfo(hi);
 

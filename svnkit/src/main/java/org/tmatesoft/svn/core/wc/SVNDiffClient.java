@@ -3199,24 +3199,8 @@ public class SVNDiffClient extends SVNBasicClient {
     }
 
     public void doPatch(File absPatchPath, File localAbsPath, boolean dryRun, int stripCount) throws SVNException {
-        final SvnPatch patch = getOperationsFactory().createPatch();
-        patch.setPatchFile(absPatchPath);
-        patch.setStripCount(stripCount);
-        patch.setDryRun(dryRun);
-        patch.setSingleTarget(SvnTarget.fromFile(localAbsPath));
-        patch.run();
-    }
-
-    public void doPatch(File absPatchPath, File localAbsPath, boolean dryRun, int stripCount, boolean ignoreWhitespace, boolean removeTempFiles, boolean reverse) throws SVNException {
-        final SvnPatch patch = getOperationsFactory().createPatch();
-        patch.setPatchFile(absPatchPath);
-        patch.setStripCount(stripCount);
-        patch.setDryRun(dryRun);
-        patch.setSingleTarget(SvnTarget.fromFile(localAbsPath));
-        patch.setIgnoreWhitespace(ignoreWhitespace);
-        patch.setRemoveTempFiles(removeTempFiles);
-        patch.setReverse(reverse);
-        patch.run();
+        SVNErrorMessage err = SVNErrorMessage.create(SVNErrorCode.UNSUPPORTED_FEATURE);
+        SVNErrorManager.error(err, SVNLogType.WC);
     }
 
     private void doDiffStatus(SvnTarget source, SVNRevision rN, SVNRevision rM, SVNDepth depth, boolean useAncestry, ISVNDiffStatusHandler handler) throws SVNException {

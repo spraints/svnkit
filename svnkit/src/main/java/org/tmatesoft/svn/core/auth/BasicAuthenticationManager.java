@@ -55,7 +55,7 @@ public class BasicAuthenticationManager implements ISVNAuthenticationManager, IS
      * @param userName  a username
      * @param password  a password
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static BasicAuthenticationManager newInstance(String userName, char[] password) {
         return newInstance(new SVNAuthentication[] {
@@ -74,7 +74,7 @@ public class BasicAuthenticationManager implements ISVNAuthenticationManager, IS
      * @param passphrase  a password to the private key
      * @param portNumber  a port number over which an ssh tunnel is established
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static BasicAuthenticationManager newInstance(String userName, File keyFile, char[] passphrase, int portNumber) {
         return newInstance(new SVNAuthentication[] {
@@ -88,7 +88,7 @@ public class BasicAuthenticationManager implements ISVNAuthenticationManager, IS
      * 
      * @param credentials user credentials
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public static BasicAuthenticationManager newInstance(SVNAuthentication[] credentials) {
         return new BasicAuthenticationManager(credentials);        
@@ -413,7 +413,7 @@ public class BasicAuthenticationManager implements ISVNAuthenticationManager, IS
     /**
      * Returns the password to authenticate against the proxy server.
      *
-     * @since 1.8.9
+     * @since 1.7.14
      * 
      * @return the proxy password argument value specified via the {@link #setProxy(String, int, String, String)} 
      *         method 
@@ -479,7 +479,7 @@ public class BasicAuthenticationManager implements ISVNAuthenticationManager, IS
      * 
      * Calling this method clears and removes all credentials stored in this authentication manager.
      * 
-     * @since 1.8.9
+     * @since 1.7.14
      */
     public void dismissSensitiveData() {
         dismissSensitiveData(myPasswordAuthentications);

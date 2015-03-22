@@ -212,8 +212,6 @@ public class SVNPatchFileStream {
             while (!eol) {
                 switch (c = file.read()) {
                     case -1:
-                        eol = true;
-                        break;
                     case '\n':
                         if (detectEol && eolStr != null) {
                             eolStr.append((char) c);
@@ -256,7 +254,7 @@ public class SVNPatchFileStream {
             input.append(line);
         }
 
-        return input.length() == 0 && c == -1 && isEOF();
+        return input.length() == 0 && isEOF();
     }
 
 }

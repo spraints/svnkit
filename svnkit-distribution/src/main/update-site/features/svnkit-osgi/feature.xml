@@ -10,7 +10,7 @@
    </description>
 
    <copyright url="http://svnkit.com/">
-      (c) 2004-2015, TMate Software Ltd.
+      (c) 2004-2011, TMate Software Ltd.
    </copyright>
 
    <license url="">
@@ -18,8 +18,8 @@
    </license>
 
    <url>
-      <update label="TMate Software SVNKit 1.8.x Update Site" url="http://eclipse.tmatesoft.com/svnkit/1.8.x/"/>
-      <discovery label="TMate Software SVNKit 1.8.x Update Site" url="http://eclipse.tmatesoft.com/svnkit/1.8.x/"/>
+      <update label="TMate Software SVNKit 1.7.x Update Site" url="http://eclipse.tmatesoft.com/svnkit/1.7.x/"/>
+      <discovery label="TMate Software SVNKit 1.7.x Update Site" url="http://eclipse.tmatesoft.com/svnkit/1.7.x/"/>
    </url>
 
    <plugin

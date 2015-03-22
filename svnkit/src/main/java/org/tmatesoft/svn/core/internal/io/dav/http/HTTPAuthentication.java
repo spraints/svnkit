@@ -29,6 +29,7 @@ import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication;
 import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
 import org.tmatesoft.svn.core.internal.wc.SVNErrorManager;
+import org.tmatesoft.svn.util.SVNDebugLog;
 import org.tmatesoft.svn.util.SVNLogType;
 
 /**
@@ -130,9 +131,12 @@ abstract class HTTPAuthentication {
                     continue;
                 }
             }
-            String method = source.substring(0, index);
-        
+            final String method = source.substring(0, index);        
             source = source.substring(index).trim();
+
+            SVNDebugLog.getDefaultLog().logFine(SVNLogType.NETWORK, 
+                    "Looking for authentication implementation for '" + method + "'");
+
             if ("Basic".equalsIgnoreCase(method)) {
                 auth = new HTTPBasicAuthentication(charset);
                 
@@ -150,7 +154,7 @@ abstract class HTTPAuthentication {
                 }
                 break;
             } else if ("Digest".equalsIgnoreCase(method)) {
-                auth = new HTTPDigestAuthentication(charset);
+                auth = new HTTPDigestAuthentication();
                 
                 char[] chars = (source + " ").toCharArray();
                 int tokenIndex = 0;
@@ -209,6 +213,8 @@ abstract class HTTPAuthentication {
                         } else {
                             ntlmAuth = new HTTPNTLMAuthentication(charset);
                         }
+                        SVNDebugLog.getDefaultLog().logFine(SVNLogType.NETWORK, 
+                                "non-native NTLM implementation = " + ntlmAuth);
                     }
                     ntlmAuth.setType1State();
                 } else {

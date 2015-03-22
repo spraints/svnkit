@@ -109,7 +109,7 @@ public class SVNSSLAuthentication extends SVNAuthentication {
     /**
      * Returns password. 
      *
-     * @since 1.8.9
+     * @since 1.7.14
      * @return password
      */
     public char[] getPasswordValue() {

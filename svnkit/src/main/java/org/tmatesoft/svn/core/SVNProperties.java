@@ -140,7 +140,7 @@ public class SVNProperties implements Cloneable, Serializable {
      *
      * @return copy of SVNProperties as Map object
      */
-    public Map<String, SVNPropertyValue> asMap() {
+    public Map asMap() {
         if (myProperties == null) {
             return Collections.unmodifiableMap(Collections.EMPTY_MAP);
         }
@@ -426,7 +426,7 @@ public class SVNProperties implements Cloneable, Serializable {
             String changed = (String) props.next();
             SVNPropertyValue value1 = getSVNPropertyValue(changed);
             SVNPropertyValue value2 = properties.getSVNPropertyValue(changed);
-            if (!SVNPropertyValue.areEqual(value1, value2)) {
+            if (!value1.equals(value2)) {
                 result.put(changed, value2);
             }
         }
