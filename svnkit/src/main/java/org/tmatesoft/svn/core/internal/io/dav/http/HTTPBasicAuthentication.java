@@ -11,12 +11,10 @@
  */
 package org.tmatesoft.svn.core.internal.io.dav.http;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication;
 import org.tmatesoft.svn.core.internal.util.SVNBase64;
-import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
 
 /**
  * @version 1.3
@@ -31,7 +29,7 @@ class HTTPBasicAuthentication extends HTTPAuthentication {
         myCharset = charset;
     }
 
-    protected HTTPBasicAuthentication (String name, char[] password, String charset) {
+    protected HTTPBasicAuthentication (String name, String password, String charset) {
         super(name, password);
         myCharset = charset;
     }
@@ -46,35 +44,19 @@ class HTTPBasicAuthentication extends HTTPAuthentication {
         }
         
         StringBuffer result = new StringBuffer();
-
-        final ByteArrayStream bos = new ByteArrayStream();
+        String authStr = getUserName() + ":" + getPassword();
         try {
-            bos.write(SVNEncodingUtil.getBytes(getUserName().toCharArray(), myCharset));
-            bos.write(SVNEncodingUtil.getBytes(new char[] {':'}, myCharset));
-            bos.write(SVNEncodingUtil.getBytes(getPassword(), myCharset));
-        } catch (IOException e) {
-            //
+            authStr = SVNBase64.byteArrayToBase64(authStr.getBytes(myCharset));
+        } catch (UnsupportedEncodingException e) {
+            authStr = SVNBase64.byteArrayToBase64(authStr.getBytes());
         }
-
         result.append("Basic ");
-        byte[] bytes = bos.toByteArray();
-        try {
-            result.append(SVNBase64.byteArrayToBase64(bos.toByteArray()));
-        } finally {
-            SVNEncodingUtil.clearArray(bos.getBuffer());
-            SVNEncodingUtil.clearArray(bytes);
-        }
+        result.append(authStr);
         return result.toString();
     }
 
     public String getAuthenticationScheme(){
         return "Basic";
-    }
-    
-    private static class ByteArrayStream extends ByteArrayOutputStream {
-        public byte[] getBuffer() {
-            return buf;
-        }
     }
 
 }

@@ -58,7 +58,6 @@ import org.tmatesoft.svn.core.auth.BasicAuthenticationManager;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManagerExt;
 import org.tmatesoft.svn.core.auth.ISVNProxyManager;
-import org.tmatesoft.svn.core.auth.ISVNProxyManagerEx;
 import org.tmatesoft.svn.core.auth.SVNAuthentication;
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication;
 import org.tmatesoft.svn.core.internal.io.dav.handlers.DAVErrorHandler;
@@ -251,8 +250,8 @@ public class HTTPConnection implements IHTTPConnection {
                             }
 
                             if (!credentialsUsed) {
-                                myProxyAuthentication.setCredentials(SVNPasswordAuthentication.newInstance(proxyManager.getProxyUserName(), 
-                                        getProxyPasswordValue(proxyManager), false, myRepository.getLocation(), false));
+                                myProxyAuthentication.setCredentials(new SVNPasswordAuthentication(proxyManager.getProxyUserName(), 
+                                        proxyManager.getProxyPassword(), false, myRepository.getLocation(), false));
                                 debugLog.logFine(SVNLogType.NETWORK, "explicit credentials set");
                                 credentialsUsed = true;
                             } else {
@@ -270,10 +269,10 @@ public class HTTPConnection implements IHTTPConnection {
                             SVNErrorManager.error(err, connectRequest.getErrorMessage(), SVNLogType.NETWORK);
                         }
                     }
-                } else if (proxyManager.getProxyUserName() != null && getProxyPasswordValue(proxyManager) != null ){
+                } else if (proxyManager.getProxyUserName() != null && proxyManager.getProxyPassword() != null ){
                     myProxyAuthentication = new HTTPBasicAuthentication("UTF-8");
-                    myProxyAuthentication.setCredentials(SVNPasswordAuthentication.newInstance(proxyManager.getProxyUserName(), 
-                            getProxyPasswordValue(proxyManager), false, myRepository.getLocation(), false));
+                    myProxyAuthentication.setCredentials(new SVNPasswordAuthentication(proxyManager.getProxyUserName(), 
+                            proxyManager.getProxyPassword(), false, myRepository.getLocation(), false));
                     debugLog.logFine(SVNLogType.NETWORK, "explicit credentials set");
                 }
             } else {
@@ -284,20 +283,6 @@ public class HTTPConnection implements IHTTPConnection {
                         SVNSocketFactory.createPlainSocket(host, port, connectTimeout, readTimeout, myRepository.getCanceller());
 	              myLogSSLParams = true;
             }
-        }
-    }
-    
-    private char[] getProxyPasswordValue(ISVNProxyManager proxyManager) {
-        if (proxyManager == null) {
-            return null;
-        } else if (proxyManager instanceof ISVNProxyManagerEx) {
-            return ((ISVNProxyManagerEx) proxyManager).getProxyPasswordValue();
-        } else {
-            final String password = proxyManager.getProxyPassword();
-            if (password == null) {
-                return null;
-            }
-            return password.toCharArray();
         }
     }
     
@@ -366,20 +351,12 @@ public class HTTPConnection implements IHTTPConnection {
     }
     
     public void clearAuthenticationCache() {
-        clearLastValidAuth();
-        
+        myLastValidAuth = null;
         myTrustManager = null;
         myKeyManager = null;
         myChallengeCredentials = null;
         myProxyAuthentication = null;
         myRequestCount = 0;
-    }
-    
-    private void clearLastValidAuth() {
-        if (myLastValidAuth != null) {
-            myLastValidAuth.dismissSensitiveData();
-        }
-        myLastValidAuth = null;
     }
 
     public HTTPStatus request(String method, String path, HTTPHeader header, StringBuffer body, int ok1, int ok2, OutputStream dst, DefaultHandler handler) throws SVNException {
@@ -583,7 +560,7 @@ public class HTTPConnection implements IHTTPConnection {
                 if (httpAuth != null && authManager != null) {
                     BasicAuthenticationManager.acknowledgeAuthentication(false, ISVNAuthenticationManager.PASSWORD, realm, request.getErrorMessage(), httpAuth, myRepository.getLocation(), authManager);
                 }
-                clearLastValidAuth();
+                myLastValidAuth = null;
                 close();
                 err = request.getErrorMessage();
             } else if (myIsProxied && myLastStatus.getCode() == HttpURLConnection.HTTP_PROXY_AUTH) {
@@ -675,7 +652,7 @@ public class HTTPConnection implements IHTTPConnection {
                 } else if (myChallengeCredentials instanceof HTTPDigestAuthentication) {
                     // continue (retry once) if previous request was acceppted?
                     if (myLastValidAuth != null) {
-                        clearLastValidAuth();
+                        myLastValidAuth = null;
                         continue;
                     }
                 } else if (myChallengeCredentials instanceof HTTPNegotiateAuthentication) {
@@ -686,7 +663,7 @@ public class HTTPConnection implements IHTTPConnection {
                     }
                 }
 
-                clearLastValidAuth();
+                myLastValidAuth = null;
 
                 if (ntlmAuth != null && authAttempts == 1) {
                     /*
@@ -775,7 +752,7 @@ public class HTTPConnection implements IHTTPConnection {
 	        }
             
             if (httpAuth != null) {
-                myLastValidAuth = httpAuth.copy();
+                myLastValidAuth = httpAuth;
             }
 
             if (myLastStatus.getCodeClass() == 2 && authManager instanceof ISVNAuthenticationManagerExt) {
@@ -980,8 +957,6 @@ public class HTTPConnection implements IHTTPConnection {
     public void close() {
         if (isClearCredentialsOnClose(myChallengeCredentials)) {
             clearAuthenticationCache();
-        } else {
-            clearLastValidAuth();
         }
         if (mySocket != null) {
             if (myInputStream != null) {

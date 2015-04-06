@@ -27,7 +27,6 @@ import org.tmatesoft.svn.core.SVNErrorMessage;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication;
-import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
 import org.tmatesoft.svn.core.internal.wc.SVNErrorManager;
 import org.tmatesoft.svn.util.SVNLogType;
 
@@ -39,7 +38,7 @@ abstract class HTTPAuthentication {
 
     private Map<String, String> myChallengeParameters;
     private String myUserName;
-    private char[] myPassword;
+    private String myPassword;
     
     private static final String AUTH_METHODS_PROPERTY = "svnkit.http.methods";
     private static final String OLD_AUTH_METHODS_PROPERTY = "javasvn.http.methods";
@@ -47,11 +46,11 @@ abstract class HTTPAuthentication {
     protected HTTPAuthentication (SVNPasswordAuthentication credentials) {
         if (credentials != null) {
             myUserName = credentials.getUserName();
-            myPassword = credentials.getPasswordValue();
+            myPassword = credentials.getPassword();
         }
     }
 
-    protected HTTPAuthentication (String name, char[] password) {
+    protected HTTPAuthentication (String name, String password) {
         myUserName = name;
         myPassword = password;
     }
@@ -81,7 +80,7 @@ abstract class HTTPAuthentication {
     public void setCredentials(SVNPasswordAuthentication credentials) {
         if (credentials != null) {
             myUserName = credentials.getUserName();
-            myPassword = credentials.getPasswordValue();
+            myPassword = credentials.getPassword();
         }
     }
     
@@ -93,7 +92,7 @@ abstract class HTTPAuthentication {
         return myUserName;
     }
     
-    public char[] getPassword() {
+    public String getPassword() {
         return myPassword;
     }
 
@@ -101,7 +100,7 @@ abstract class HTTPAuthentication {
         myUserName = name;
     }
     
-    public void setPassword(char[] password) {
+    public void setPassword(String password) {
         myPassword = password;
     }
     
@@ -360,18 +359,6 @@ abstract class HTTPAuthentication {
         } catch (UnsupportedEncodingException e) {
             return data.getBytes();
         }
-    }
-
-    protected static byte[] getBytes(final char[] data, String charset) {
-        return SVNEncodingUtil.getBytes(data, charset);
-    }
-
-    public static void clear(byte[] array) {
-        SVNEncodingUtil.clearArray(array);
-    }
-
-    public static void clear(char[] array) {
-        SVNEncodingUtil.clearArray(array);
     }
 
 }

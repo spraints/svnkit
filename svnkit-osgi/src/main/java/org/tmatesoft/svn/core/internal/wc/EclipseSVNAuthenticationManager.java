@@ -44,14 +44,7 @@ public class EclipseSVNAuthenticationManager extends DefaultSVNAuthenticationMan
         }
     }
 
-    /**
-     * @deprecated Use {@link #EclipseSVNAuthenticationManager(File, boolean, String, char[], File, char[])}
-     */
     public EclipseSVNAuthenticationManager(File configDirectory, boolean storeAuth, String userName, String password, File keyFile, String passphrase) {
-        this(configDirectory, storeAuth, userName, password != null ? password.toCharArray() : null, keyFile, passphrase != null ? passphrase.toCharArray() : null);
-    }
-
-    public EclipseSVNAuthenticationManager(File configDirectory, boolean storeAuth, String userName, char[] password, File keyFile, char[] passphrase) {
         super(configDirectory, storeAuth, userName, password, keyFile, passphrase);
     }
 
@@ -59,7 +52,7 @@ public class EclipseSVNAuthenticationManager extends DefaultSVNAuthenticationMan
         return new KeyringAuthenticationProvider();
     }
 
-    protected ISVNAuthenticationProvider createDefaultAuthenticationProvider(String userName, char[] password, File privateKey, char[] passphrase, boolean allowSave) {
+    protected ISVNAuthenticationProvider createDefaultAuthenticationProvider(String userName, String password, File privateKey, String passphrase, boolean allowSave) {
         return new DumbAuthenticationProvider(userName, password, privateKey, passphrase, allowSave) {
             public int acceptServerAuthentication(SVNURL url, String realm, Object certificate, boolean resultMayBeStored) {
                 return ACCEPTED;

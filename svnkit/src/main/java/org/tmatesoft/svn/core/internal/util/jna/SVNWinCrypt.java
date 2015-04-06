@@ -11,8 +11,9 @@
  */
 package org.tmatesoft.svn.core.internal.util.jna;
 
+import java.io.UnsupportedEncodingException;
+
 import org.tmatesoft.svn.core.internal.util.SVNBase64;
-import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
 import org.tmatesoft.svn.core.internal.wc.SVNFileUtil;
 
 import com.sun.jna.NativeLong;
@@ -25,7 +26,7 @@ import com.sun.jna.WString;
  */
 class SVNWinCrypt {
 
-    public static char[] decrypt(char[] encryptedData) {
+    public static String decrypt(String encryptedData) {
         if (encryptedData == null) {
             return null;
         }
@@ -33,12 +34,11 @@ class SVNWinCrypt {
         if (library == null) {
             return null;
         }
-        byte[] buffer = new byte[encryptedData.length];
-        encryptedData = SVNBase64.normalizeBase64(encryptedData);
-        int decodedBytes = SVNBase64.base64ToByteArray(encryptedData, buffer);
+        byte[] buffer = new byte[encryptedData.length()];
+        StringBuffer sb = SVNBase64.normalizeBase64(new StringBuffer(encryptedData));
+        int decodedBytes = SVNBase64.base64ToByteArray(sb, buffer);
         byte[] decodedBuffer = new byte[decodedBytes];
         System.arraycopy(buffer, 0, decodedBuffer, 0, decodedBytes);
-        SVNEncodingUtil.clearArray(buffer);
         
         ISVNWinCryptLibrary.DATA_BLOB dataIn = null; 
         ISVNWinCryptLibrary.DATA_BLOB dataOut = null;
@@ -62,7 +62,7 @@ class SVNWinCrypt {
             }
             byte[] decryptedData = new byte[dataOut.cbSize.intValue()];
             dataOut.cbData.read(0, decryptedData, 0, decryptedData.length);
-            return SVNEncodingUtil.getChars(decryptedData, 0, decryptedData.length, "UTF-8");
+            return new String(decryptedData, 0, decryptedData.length, "UTF-8");
         } catch (Throwable th) {
             return null;
         } finally {
@@ -81,7 +81,7 @@ class SVNWinCrypt {
         }
     }
     
-    public static char[] encrypt(char[] rawData) {
+    public static String encrypt(String rawData) {
         if (rawData == null) {
             return null;
         }
@@ -92,7 +92,11 @@ class SVNWinCrypt {
         ISVNWinCryptLibrary.DATA_BLOB dataIn = null;
         ISVNWinCryptLibrary.DATA_BLOB dataOut = null;
         try {
-            dataIn = new ISVNWinCryptLibrary.DATA_BLOB(SVNEncodingUtil.getBytes(rawData, "UTF-8"));
+            try {
+                dataIn = new ISVNWinCryptLibrary.DATA_BLOB(rawData.getBytes("UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                return rawData;
+            }
             dataIn.write();
             dataOut = new ISVNWinCryptLibrary.DATA_BLOB(null);
             dataOut.write();
@@ -113,7 +117,7 @@ class SVNWinCrypt {
             }
             byte[] encryptedData = new byte[dataOut.cbSize.intValue()];
             dataOut.cbData.read(0, encryptedData, 0, encryptedData.length);
-            return SVNBase64.byteArrayToBase64(encryptedData).toCharArray();
+            return SVNBase64.byteArrayToBase64(encryptedData);
         } catch (Throwable th) {
             return rawData;
         } finally {

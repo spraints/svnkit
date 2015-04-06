@@ -19,5 +19,5 @@ import org.tmatesoft.svn.core.SVNException;
 
 public interface ISVNGnomeKeyringPasswordProvider {
 
-    public char[] getKeyringPassword(String keyringName) throws SVNException;
+    public String getKeyringPassword(String keyringName) throws SVNException;
 }

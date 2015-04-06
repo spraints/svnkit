@@ -181,22 +181,6 @@ public class SVNProperties implements Cloneable, Serializable {
      *
      * <p>
      * <code>propertyValue</code> is converted to an {@link SVNPropertyValue}
-     * object through a call to {@link SVNPropertyValue#create(String)}.
-     *
-     * @param propertyName
-     *            property name
-     * @param propertyValue
-     *            property value string
-     */
-    public void put(String propertyName, char[] propertyValue, String encoding) {
-        myProperties.put(propertyName, SVNPropertyValue.create(propertyValue, encoding));
-    }
-
-    /**
-     * Stores a new property name-to-value mapping in this object.
-     *
-     * <p>
-     * <code>propertyValue</code> is converted to an {@link SVNPropertyValue}
      * object through a call to {@link SVNPropertyValue#create(String, byte[])}.
      *
      * @param propertyName
@@ -501,14 +485,6 @@ public class SVNProperties implements Cloneable, Serializable {
             return myProperties.toString();
         }
         return "";
-    }
-
-    public void dispose() {
-        if (myProperties != null) {
-            for (SVNPropertyValue value : myProperties.values()) {
-                value.clear();
-            }
-        }
     }
 
 }

@@ -12,7 +12,6 @@
 package org.tmatesoft.svn.core.auth;
 
 import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
 
 /**
  * The <b>SVNPasswordAuthentication</b> class represents a simple 
@@ -29,30 +28,13 @@ import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
  * @since   1.2
  */
 public class SVNPasswordAuthentication extends SVNAuthentication {
-    
-    /**
-     * Creates a password user credential object given a username and password.
-     * 
-     * @param userName         the name of a user to authenticate 
-     * @param password         the user's password
-     * @param storageAllowed   if <span class="javakeyword">true</span> then
-     *                         this credential is allowed to be stored in the 
-     *                         global auth cache, otherwise not
-     * @param url              url these credentials are applied to
-     * @param isPartial        whether this object only contains part of credentials information
-     * 
-     * @since 1.8.9
-     */
-    public static SVNPasswordAuthentication newInstance(String userName, char[] password, boolean storageAllowed, SVNURL url, boolean isPartial) {
-        return new SVNPasswordAuthentication(userName, password, storageAllowed, url, isPartial);
-    }
 
-    private char[] myPassword;
+    private String myPassword;
     
     /**
      * Creates a password user credential object given a username and password. 
      * 
-     * @deprecated use {@link #newInstance(String, char[], boolean, SVNURL, boolean)}
+     * @deprecated use constructor with SVNURL parameter instead
      * 
      * @param userName         the name of a user to authenticate 
      * @param password         the user's password
@@ -61,13 +43,11 @@ public class SVNPasswordAuthentication extends SVNAuthentication {
      *                         global auth cache, otherwise not
      */
     public SVNPasswordAuthentication(String userName, String password, boolean storageAllowed) {
-        this(userName, password == null ? new char[0] : password.toCharArray(), storageAllowed, null, false);
+        this(userName, password, storageAllowed, null, false);
     }
 
     /**
-     * Creates a password user credential object given a username and password.
-     * 
-     * @deprecated use {@link #newInstance(String, char[], boolean, SVNURL, boolean)}
+     * Creates a password user credential object given a username and password. 
      * 
      * @param userName         the name of a user to authenticate 
      * @param password         the user's password
@@ -78,43 +58,16 @@ public class SVNPasswordAuthentication extends SVNAuthentication {
      * @since 1.3.1
      */
     public SVNPasswordAuthentication(String userName, String password, boolean storageAllowed, SVNURL url, boolean isPartial) {
-        this(userName, password == null ? new char[0] : password.toCharArray(), storageAllowed, url, isPartial);
-    }
-
-    private SVNPasswordAuthentication(String userName, char[] password, boolean storageAllowed, SVNURL url, boolean isPartial) {
         super(ISVNAuthenticationManager.PASSWORD, userName, storageAllowed, url, isPartial);
-        myPassword = password == null ? new char[0] : password;
+        myPassword = password == null ? "" : password;
     }
 
     /**
-     * Returns password. 
-     *
-     * @deprecated Use {@link #getPasswordValue()} method
+     * Returns this user credential's password. 
      * 
-     * @return password
+     * @return the user's password
      */
     public String getPassword() {
-        return new String(myPassword);
-    }
-    
-    /**
-     * Returns password. 
-     *
-     * @since 1.8.9
-     * @return password
-     */
-    public char[] getPasswordValue() {
         return myPassword;
-    }
-
-    @Override
-    public void dismissSensitiveData() {
-        super.dismissSensitiveData();
-        SVNEncodingUtil.clearArray(myPassword);
-    }
-
-    @Override
-    public SVNAuthentication copy() {
-        return new SVNPasswordAuthentication(getUserName(), copyOf(myPassword), isStorageAllowed(), getURL(), isPartial());
     }
 }

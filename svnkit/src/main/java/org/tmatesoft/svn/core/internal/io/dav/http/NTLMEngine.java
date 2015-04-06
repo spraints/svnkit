@@ -115,7 +115,7 @@ final class NTLMEngine implements INTLMEngine {
      * @throws NTLMEngineException
      *             If the messages cannot be retrieved.
      */
-    final String getResponseFor(final String message, final String username, final char[] password,
+    final String getResponseFor(final String message, final String username, final String password,
                                 final String host, final String domain) throws NTLMEngineException {
 
         final String response;
@@ -164,7 +164,7 @@ final class NTLMEngine implements INTLMEngine {
      * @throws NTLMEngineException
      *             If {@link #RC4(byte[],byte[])} fails.
      */
-    String getType3Message(final String user, final char[] password, final String host, final String domain,
+    String getType3Message(final String user, final String password, final String host, final String domain,
                            final byte[] nonce, final int type2Flags, final String target, final byte[] targetInformation)
             throws NTLMEngineException {
         return new Type3Message(domain, host, user, password, nonce, type2Flags, target,
@@ -263,7 +263,7 @@ final class NTLMEngine implements INTLMEngine {
 
         protected final String domain;
         protected final String user;
-        protected final char[] password;
+        protected final String password;
         protected final byte[] challenge;
         protected final String target;
         protected final byte[] targetInformation;
@@ -292,7 +292,7 @@ final class NTLMEngine implements INTLMEngine {
         protected byte[] ntlm2SessionResponseUserSessionKey = null;
         protected byte[] lanManagerSessionKey = null;
 
-        public CipherGen(final String domain, final String user, final char[] password,
+        public CipherGen(final String domain, final String user, final String password,
                          final byte[] challenge, final String target, final byte[] targetInformation,
                          final byte[] clientChallenge, final byte[] clientChallenge2,
                          final byte[] secondaryKey, final byte[] timestamp) {
@@ -308,7 +308,7 @@ final class NTLMEngine implements INTLMEngine {
             this.timestamp = timestamp;
         }
 
-        public CipherGen(final String domain, final String user, final char[] password,
+        public CipherGen(final String domain, final String user, final String password,
                          final byte[] challenge, final String target, final byte[] targetInformation) {
             this(domain, user, password, challenge, target, targetInformation, null, null, null, null);
         }
@@ -603,15 +603,9 @@ final class NTLMEngine implements INTLMEngine {
      * @return The LM Hash of the given password, used in the calculation of the
      *         LM Response.
      */
-    private static byte[] lmHash(final char[] password) throws NTLMEngineException {
-        final char[] upperCasePassword = new char[password.length];
-        System.arraycopy(password, 0, upperCasePassword, 0, password.length);
-        for (int i = 0; i < upperCasePassword.length; i++) {
-            upperCasePassword[i] = Character.toUpperCase(password[i]);
-        }
-        final byte[] passwordBytes = HTTPAuthentication.getBytes(upperCasePassword, "US-ASCII");
+    private static byte[] lmHash(final String password) throws NTLMEngineException {
         try {
-            final byte[] oemPassword = passwordBytes;
+            final byte[] oemPassword = password.toUpperCase(Locale.ENGLISH).getBytes("US-ASCII");
             final int length = Math.min(oemPassword.length, 14);
             final byte[] keyBytes = new byte[14];
             System.arraycopy(oemPassword, 0, keyBytes, 0, length);
@@ -629,9 +623,6 @@ final class NTLMEngine implements INTLMEngine {
             return lmHash;
         } catch (final Exception e) {
             throw new NTLMEngineException(e.getMessage(), e);
-        } finally {
-            HTTPAuthentication.clear(passwordBytes);
-            HTTPAuthentication.clear(upperCasePassword);
         }
     }
 
@@ -644,12 +635,15 @@ final class NTLMEngine implements INTLMEngine {
      * @return The NTLM Hash of the given password, used in the calculation of
      *         the NTLM Response and the NTLMv2 and LMv2 Hashes.
      */
-    private static byte[] ntlmHash(final char[] password) throws NTLMEngineException {
-        final byte[] unicodePassword = HTTPAuthentication.getBytes(password, "UnicodeLittleUnmarked");
-        final MD4 md4 = new MD4();
-        md4.update(unicodePassword);
-        HTTPAuthentication.clear(unicodePassword);
-        return md4.getOutput();
+    private static byte[] ntlmHash(final String password) throws NTLMEngineException {
+        try {
+            final byte[] unicodePassword = password.getBytes("UnicodeLittleUnmarked");
+            final MD4 md4 = new MD4();
+            md4.update(unicodePassword);
+            return md4.getOutput();
+        } catch (final UnsupportedEncodingException e) {
+            throw new NTLMEngineException("Unicode not supported: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -1193,7 +1187,7 @@ final class NTLMEngine implements INTLMEngine {
 
 
         /** Constructor. Pass the arguments we will need */
-        Type3Message(final String domain, final String host, final String user, final char[] password, final byte[] nonce,
+        Type3Message(final String domain, final String host, final String user, final String password, final byte[] nonce,
                      final int type2Flags, final String target, final byte[] targetInformation)
                 throws NTLMEngineException {
             // Save the flags
@@ -1662,7 +1656,7 @@ final class NTLMEngine implements INTLMEngine {
 
     public String generateType3Msg(
             final String username,
-            final char[] password,
+            final String password,
             final String domain,
             final String workstation,
             final String challenge) throws NTLMEngineException {
@@ -1678,5 +1672,4 @@ final class NTLMEngine implements INTLMEngine {
                 t2m.getTargetInfo());
     }
 
- 
 }

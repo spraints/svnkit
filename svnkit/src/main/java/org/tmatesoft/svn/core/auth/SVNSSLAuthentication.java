@@ -14,7 +14,6 @@ package org.tmatesoft.svn.core.auth;
 import java.io.File;
 
 import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.internal.util.SVNEncodingUtil;
 import org.tmatesoft.svn.core.internal.wc.SVNFileType;
 
 /**
@@ -31,88 +30,55 @@ public class SVNSSLAuthentication extends SVNAuthentication {
     public static final String MSCAPI = "MSCAPI";
     public static final String SSL = "SSL";
     
-    /**
-     * @param certFile         user's certificate file
-     * @param password         user's password 
-     * @param storageAllowed   to store or not this credential in a 
-     *                         credentials cache
-     * @param url              url these credentials are applied to
-     * @param isPartial
-     * 
-     * @return authentication object
-     */
-    public static SVNSSLAuthentication newInstance(File certFile, char[] password, boolean storageAllowed, SVNURL url, boolean isPartial) {
-        return new SVNSSLAuthentication(SSL, null, certFile, password, storageAllowed, url, isPartial);
-    }
-
-    /**
-     * @param kind             authentication kind ({@link #MSCAPI} or {@link #SSL}
-     * @param alias            alias 
-     * @param storageAllowed   to store or not this credential in a 
-     *                         credentials cache
-     * @param url              url these credentials are applied to
-     * @param isPartial
-     * 
-     * @return authentication object
-     */
-    public static SVNSSLAuthentication newInstance(String kind, String alias, boolean storageAllowed, SVNURL url, boolean isPartial) {
-        return new SVNSSLAuthentication(kind, alias, null, null, storageAllowed, url, isPartial);
-    }
-
-    
     private File myCertificate;
-    private char[] myPassword;
+    private String myPassword;
     private String mySSLKind;
     private String myAlias;
     private String myCertificatePath;
 
     /**
-     * @deprecated Use {@link #newInstance(File, char[], boolean, SVNURL, boolean) method
+     * Creates an SSL credentials object. 
+     * 
+     * @deprecated use constructor with SVNURL parameter instead
+     * 
+     * @param certFile         user's certificate file
+     * @param password         user's password 
+     * @param storageAllowed   to store or not this credential in a 
+     *                         credentials cache    
      */
     public SVNSSLAuthentication(File certFile, String password, boolean storageAllowed) {
-        this(SSL, null, certFile, password != null ? password.toCharArray() : null, storageAllowed, null, false);
+        this(certFile, password, storageAllowed, null, false);
     }
 
     /**
-     * @deprecated Use {@link #newInstance(File, char[], boolean, SVNURL, boolean) method
+     * Creates an SSL credentials object. 
+     * 
+     * @param certFile         user's certificate file
+     * @param password         user's password 
+     * @param storageAllowed   to store or not this credential in a 
+     *                         credentials cache
+     * @param url              url these credentials are applied to
+     * @since 1.3.1
      */
     public SVNSSLAuthentication(File certFile, String password, boolean storageAllowed, SVNURL url, boolean isPartial) {
-        this(SSL, null, certFile, password != null ? password.toCharArray() : null, storageAllowed, url, isPartial);
-    }
-
-    /**
-     * @deprecated Use {@link #newInstance(String, String, boolean, SVNURL, boolean)} method
-     */
-    public SVNSSLAuthentication(String sslKind, String alias, boolean storageAllowed, SVNURL url, boolean isPartial) {
-        this(sslKind, alias, null, null, storageAllowed, url, isPartial);
-    }
-
-    private SVNSSLAuthentication(String sslKind, String alias, File certFile, char[] password, boolean storageAllowed, SVNURL url, boolean isPartial) {
         super(ISVNAuthenticationManager.SSL, null, storageAllowed, url, isPartial);
-        mySSLKind = sslKind;
-        myAlias = alias;
         myCertificate = certFile;
         myPassword = password;
+        mySSLKind = SSL;
+    }
+
+    public SVNSSLAuthentication(String sslKind, String alias, boolean storageAllowed, SVNURL url, boolean isPartial) {
+        this((File) null, null, storageAllowed, url, isPartial);
+        mySSLKind = sslKind;
+        myAlias = alias;
     }
 
     /**
-     * Returns password. 
-     *
-     * @deprecated Use {@link #getPasswordValue()} method
+     * Return a user's password. 
      * 
-     * @return password
+     * @return a password
      */
     public String getPassword() {
-        return myPassword != null ? new String(myPassword) : null;
-    }
-    
-    /**
-     * Returns password. 
-     *
-     * @since 1.8.9
-     * @return password
-     */
-    public char[] getPasswordValue() {
         return myPassword;
     }
 
@@ -150,16 +116,4 @@ public class SVNSSLAuthentication extends SVNAuthentication {
     public static boolean isCertificatePath(String path) {
         return SVNFileType.getType(new File(path)) == SVNFileType.FILE;
     }
-
-    @Override
-    public void dismissSensitiveData() {
-        super.dismissSensitiveData();
-        SVNEncodingUtil.clearArray(myPassword);
-    }
-    
-    @Override
-    public SVNAuthentication copy() {
-        return new SVNSSLAuthentication(mySSLKind, myAlias, myCertificate, copyOf(myPassword), isStorageAllowed(), getURL(), isPartial());
-    }
-    
 }
