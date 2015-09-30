@@ -62,7 +62,6 @@ public class DAVConnection {
     protected Map myLocks;
     protected Map myCapabilities;
     //HTTPv2 stuff:
-    protected boolean myHttpV2Enabled;
     protected String myMeResource;
     protected String myRevStub;
     protected String myRevRootStub;
@@ -83,7 +82,6 @@ public class DAVConnection {
         myRepository = repository;
         myConnectionFactory = connectionFactory;
         myLatestRevision = SVNRepository.INVALID_REVISION;
-        myHttpV2Enabled = (repository instanceof DAVRepository) && ((DAVRepository) repository).isHttpV2Enabled();
     }
 
     public boolean isReportResponseSpooled() {
@@ -662,7 +660,7 @@ public class DAVConnection {
     }
 
     public boolean hasHttpV2Support() {
-        return myHttpV2Enabled && myMeResource != null;
+        return myMeResource != null;
     }
 
     public String getMeResource() {
